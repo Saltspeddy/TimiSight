@@ -36,6 +36,7 @@ function Header({ lang, setLang, t }: { lang: Lang; setLang: (l: Lang) => void; 
           <button key={l} aria-pressed={lang === l} onClick={() => setLang(l)}>{l.toUpperCase()}</button>
         ))}
       </div>
+      <a className="btn sm" href="/login">{t.signIn}</a>
     </header>
   )
 }

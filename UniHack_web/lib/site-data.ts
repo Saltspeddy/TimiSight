@@ -15,6 +15,7 @@ export const T = {
     roles: ['Frontend', 'Backend', 'AR', 'Design'], footer: 'Made in Timișoara for UniHack.',
     back: 'Back to site', video: 'Video of the place', history: 'Then and now', drag: 'Drag to compare',
     then: 'Then', now: 'Now', checkin: 'Check in here', checked: 'Checked in. +100 points (demo).', videoNote: 'Add public/media/…mp4 to play the video.',
+    signIn: 'Sign in', profile: 'Profile',
   },
   ro: {
     appName: 'TimeHunt', nav: ['Cum funcționează', 'Previzualizare', 'Locuri', 'Echipa'],
@@ -31,6 +32,7 @@ export const T = {
     roles: ['Frontend', 'Backend', 'Design', 'AR'], footer: 'Făcut în Timișoara pentru UniHack.',
     back: 'Înapoi la site', video: 'Video cu locul', history: 'Atunci și acum', drag: 'Trage pentru a compara',
     then: 'Atunci', now: 'Acum', checkin: 'Fă check-in aici', checked: 'Check-in făcut. +100 puncte (demo).', videoNote: 'Adaugă public/media/…mp4 pentru a reda videoul.',
+    signIn: 'Autentificare', profile: 'Profil',
   },
 }
 
