@@ -33,9 +33,7 @@
           "image": "./assets/images/splash-icon.png",
           "imageWidth": 76
         }
-      ],
-      "@azesmway/react-native-unity",
-      "./plugins/withUnityArcore"
+      ]
     ],
     "experiments": {
       "typedRoutes": true,

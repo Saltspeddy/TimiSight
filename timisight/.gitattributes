@@ -24,5 +24,4 @@ gradlew.bat text eol=crlf
 *.aar binary
 *.so binary
 *.bundle binary
-*.unity3d binary
 *.pdf binary
