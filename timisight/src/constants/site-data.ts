@@ -6,7 +6,7 @@ export type Lang = 'en' | 'ro';
 export const T = {
   en: {
     appName: 'TimiSight',
-    tabs: { home: 'Home', places: 'Places', board: 'Leaderboard' },
+    tabs: { home: 'Home', places: 'Places', shop: 'Shop', board: 'Leaderboard' },
     heroTitle: 'Walk Timișoara. See it as it was.',
     heroText:
       'Visit real places in the city, check in to climb the leaderboard, and point your camera to see the past appear in AR.',
@@ -34,11 +34,26 @@ export const T = {
     boardTitle: 'Leaderboard',
     boardText: 'Check in at places to earn points and climb the ranking.',
     points: 'pts',
+    shopTitle: 'Points shop',
+    shopText: 'Spend the points you earn exploring the city.',
+    shopBalance: 'Your balance',
+    shopRedeem: 'Redeem',
+    shopSoldOut: 'Sold out',
+    shopUnlimited: 'unlimited',
+    shopLeft: 'left',
+    shopNotEnough: 'Not enough points',
+    shopActiveTitle: 'Active perks',
+    shopActiveEmpty: 'No active perks yet. Redeem a pass below.',
+    shopActivate: 'Activate',
+    shopActive: 'Active',
+    shopDeactivate: 'Deactivate',
+    shopClaim: 'Claim',
+    shopClaimed: 'claimed',
     footer: 'Made in Timișoara for UniHack.',
   },
   ro: {
     appName: 'TimiSight',
-    tabs: { home: 'Acasă', places: 'Locuri', board: 'Clasament' },
+    tabs: { home: 'Acasă', places: 'Locuri', shop: 'Magazin', board: 'Clasament' },
     heroTitle: 'Plimbă-te prin Timișoara. Vezi-o așa cum a fost.',
     heroText:
       'Vizitează locuri reale din oraș, fă check-in ca să urci în clasament și îndreaptă camera spre trecut, în realitate augmentată.',
@@ -67,6 +82,21 @@ export const T = {
     boardTitle: 'Clasament',
     boardText: 'Fă check-in la locuri ca să câștigi puncte și să urci în clasament.',
     points: 'pct',
+    shopTitle: 'Magazin de puncte',
+    shopText: 'Cheltuie punctele câștigate explorând orașul.',
+    shopBalance: 'Soldul tău',
+    shopRedeem: 'Revendică',
+    shopSoldOut: 'Epuizat',
+    shopUnlimited: 'nelimitat',
+    shopLeft: 'rămase',
+    shopNotEnough: 'Puncte insuficiente',
+    shopActiveTitle: 'Beneficii active',
+    shopActiveEmpty: 'Niciun beneficiu activ încă. Revendică un abonament mai jos.',
+    shopActivate: 'Activează',
+    shopActive: 'Activ',
+    shopDeactivate: 'Dezactivează',
+    shopClaim: 'Revendică',
+    shopClaimed: 'revendicate',
     footer: 'Făcut în Timișoara pentru UniHack.',
   },
 } as const;
@@ -138,4 +168,53 @@ export const LEADERBOARD: { name: string; points: number }[] = [
   { name: 'Radu P.', points: 1180 },
   { name: 'You', points: 1020 },
   { name: 'Ioana T.', points: 940 },
+];
+
+// The signed-in player's current points balance (demo). Matches the "You" row
+// above; a real build would read this from the points ledger.
+export const MY_POINTS = 1020;
+
+// A perk is either:
+//   'repeatable' — claimable on demand any number of times (e.g. a free coffee);
+//                  each claim spends points but never locks the offer.
+//   'active'     — a pass you hold in an active/not-active state (e.g. a museum or
+//                  transport pass); redeeming it spends points once and marks it
+//                  ACTIVE until you deactivate it.
+export type OfferKind = 'repeatable' | 'active';
+
+export type Offer = {
+  id: string;
+  partner: string;
+  cost: number; // price in points
+  stock: number | null; // null = unlimited
+  kind: OfferKind;
+  title: Record<Lang, string>;
+};
+
+// Demo shop catalogue, mirroring the web app's offers table.
+export const OFFERS: Offer[] = [
+  {
+    id: 'coffee',
+    partner: 'Partner café',
+    cost: 120,
+    stock: null,
+    kind: 'repeatable',
+    title: { en: 'Free coffee', ro: 'Cafea gratuită' },
+  },
+  {
+    id: 'museum',
+    partner: 'National Museum',
+    cost: 400,
+    stock: 25,
+    kind: 'active',
+    title: { en: 'Museum day pass', ro: 'Bilet muzeu pe o zi' },
+  },
+  {
+    id: 'tram',
+    partner: 'STPT',
+    cost: 2000,
+    stock: 0,
+    kind: 'active',
+    title: { en: 'Monthly tram pass', ro: 'Abonament tramvai lunar' },
+  },
 ];
