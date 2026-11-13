@@ -33,8 +33,9 @@ function Header({ lang, setLang, t, compact }: { lang: Lang; setLang: (l: Lang) 
         {(['en', 'ro'] as Lang[]).map((l) => (
           <button key={l} aria-pressed={lang === l} onClick={() => setLang(l)}>{l.toUpperCase()}</button>
         ))}
-      </div>
-    </header>
+        </div>
+         {!compact && <Link className="btn sm" href="/login">{t.signIn}</Link>}
+       </header>
   )
 }
 
