@@ -1,74 +1,48 @@
-import { router, useFocusEffect } from 'expo-router';
-import { useCallback, useRef } from 'react';
-import { Platform, Pressable, StyleSheet, Text, View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useFocusEffect } from 'expo-router';
+import { useCallback } from 'react';
+import { Platform, StyleSheet, Text, View } from 'react-native';
 
-import { BORDER, Brand, hardShadow } from '@/constants/brand';
+import { useUnityAr } from '@/components/unity-ar-host';
+import { Brand } from '@/constants/brand';
 
-// Full-screen Unity AR view.
+// AR screen.
 //
-// `@azesmway/react-native-unity` is a NATIVE module — it has no web implementation, so
-// importing/mounting it under react-native-web would crash. We only pull it in on
-// native platforms and render a graceful message on web.
+// IMPORTANT: this screen NO LONGER owns <UnityView>. The single Unity surface (and the
+// Close button overlay) live in <UnityArProvider> (mounted once, as a sibling of the
+// router <Stack>) and are NEVER unmounted between AR sessions. See
+// .agents/tasks/ar-reopen-crash-investigation.md (Option B) — unmounting <UnityView>
+// triggered `unloadUnity()` and the second-open crash.
 //
-// Returning to the RN app simply pops this route. Unmounting <UnityView> triggers its
-// `componentWillUnmount`, which calls `Commands.unloadUnity(...)` and tears the engine
-// down — so the Close button and the Android hardware back button both unload Unity.
-const UnityView =
-  Platform.OS === 'web'
-    ? null
-    : // Native-only module: a static top-level import would be evaluated under
-      // react-native-web and crash. A guarded require() is the supported way to skip it.
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
-      (require('@azesmway/react-native-unity').default as typeof import('@azesmway/react-native-unity').default);
-
+// This route is now just a lightweight controller: on focus it REVEALS the persistent
+// surface and tells Unity to RESUME; on blur it tells Unity to HOLD (suspend AR /
+// release camera, stay warm) and HIDES the surface. No unload/teardown ever happens.
+//
+// The persistent Unity surface renders ABOVE the router, so on native this screen's own
+// view is covered by Unity while focused. On web there is no Unity surface (the provider
+// renders nothing there), so we show a fallback message instead.
 export default function ArScreen() {
-  const insets = useSafeAreaInsets();
+  const { showAndResume, hideAndHold } = useUnityAr();
 
-  // Unity-as-a-Library can only boot ONCE per process: the wrapper's
-  // `ReactNativeUnity.java` refuses to recreate the player after a QUIT (`_isUnityQuit`).
-  // So leaving `/ar` must perform a CLEAN UNLOAD, never a quit — a clean unload resets
-  // the wrapper state and permits a later re-create, so re-entering `/ar` works again.
-  //
-  // The wrapper already unloads (not quits) on React unmount (`componentWillUnmount` →
-  // `Commands.unloadUnity`). We reinforce that here with an explicit, deterministic
-  // unload when the screen loses focus / is torn down, rather than relying solely on the
-  // native unmount path. (The standalone Unity launcher activity — which WAS what quit
-  // Unity in-process — is removed by the `withUnityArcore` config plugin; that removal is
-  // what actually prevents the quit-poisoned state. This ref/unload is belt-and-braces.)
-  const unityRef = useRef<InstanceType<NonNullable<typeof UnityView>> | null>(null);
-
+  // `useFocusEffect` runs the effect when this route is FOCUSED and the cleanup when it
+  // is BLURRED (navigated away from) — NOT on unmount. So:
+  //   focus -> reveal the persistent Unity surface + send `resume`
+  //   blur  -> send `hold` (suspend AR/camera) + hide the surface
   useFocusEffect(
     useCallback(() => {
-      // No Unity on web (UnityView is null) — nothing to clean up there.
+      showAndResume();
       return () => {
-        unityRef.current?.unloadUnity?.();
+        hideAndHold();
       };
-    }, [])
+    }, [showAndResume, hideAndHold])
   );
 
   return (
     <View style={styles.root}>
-      {UnityView ? (
-        <UnityView ref={unityRef} fullScreen style={{ flex: 1 }} />
-      ) : (
+      {Platform.OS === 'web' ? (
         <View style={styles.webFallback}>
           <Text style={styles.webText}>AR is only available on device.</Text>
         </View>
-      )}
-
-      {/* Minimal way back: overlay Close button, safe-area aware. */}
-      <Pressable
-        accessibilityRole="button"
-        accessibilityLabel="Close AR"
-        onPress={() => router.back()}
-        style={({ pressed }) => [
-          styles.close,
-          { top: insets.top + 12 },
-          pressed && styles.closePressed,
-        ]}>
-        <Text style={styles.closeText}>Close</Text>
-      </Pressable>
+      ) : null}
     </View>
   );
 }
@@ -77,17 +51,4 @@ const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: Brand.ink },
   webFallback: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24 },
   webText: { color: Brand.paper, fontSize: 18, fontWeight: '800', textAlign: 'center' },
-  close: {
-    position: 'absolute',
-    right: 16,
-    backgroundColor: Brand.blue,
-    borderWidth: BORDER,
-    borderColor: Brand.ink,
-    borderRadius: 10,
-    paddingVertical: 10,
-    paddingHorizontal: 18,
-    ...hardShadow(4),
-  },
-  closePressed: { transform: [{ translateX: 2 }, { translateY: 2 }], ...hardShadow(2) },
-  closeText: { color: '#fff', fontWeight: '800', fontSize: 16 },
 });

@@ -1,0 +1,14 @@
+{
+  "/_global-error/page": "app/_global-error/page.js",
+  "/_not-found/page": "app/_not-found/page.js",
+  "/api/db-test/route": "app/api/db-test/route.js",
+  "/auth/callback/route": "app/auth/callback/route.js",
+  "/db-test/page": "app/db-test/page.js",
+  "/favicon.ico/route": "app/favicon.ico/route.js",
+  "/login/page": "app/login/page.js",
+  "/opera/page": "app/opera/page.js",
+  "/page": "app/page.js",
+  "/profile/page": "app/profile/page.js",
+  "/signup/page": "app/signup/page.js",
+  "/unirii/page": "app/unirii/page.js"
+}
