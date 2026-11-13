@@ -1,7 +1,12 @@
+export const APP_URL = 'https://apps.apple.com/'
 // All copy is placeholder: edit freely. Facts on place pages should be verified before demo day.
 export const T = {
   en: {
-    appName: 'TimeHunt', nav: ['How it works', 'Preview', 'Places', 'Team'],
+    appName: 'TimeHunt',
+    store: 'Download the app', getApp: 'Get the app',
+    moreTitle: 'Want to experience more of Timișoara?',
+    moreText: 'Download the app to check in at places, climb the leaderboard and see the city’s past in AR.',
+    dlTitle: 'Ready to hunt through time?', dlText: 'Download the app and start your first check-in.', nav: ['How it works', 'Preview', 'Places', 'Team'],
     heroTitle: 'Walk Timișoara. See it as it was.',
     heroText: 'Visit real places in the city, check in to climb the leaderboard, and point your camera to see the past appear in AR.',
     cta: 'See the places', cta2: 'Meet the team',
@@ -12,12 +17,16 @@ export const T = {
     evs: ['Evening walk: Revolution trail', 'Student quiz at the Opera', 'Photo hunt in Piața Unirii'],
     placesTitle: 'Five places, five QR codes', placesText: 'Scan a code on site to open that place’s page. Two are live in this demo.',
     open: 'Open demo page', soon: 'Coming soon', teamTitle: 'The team', teamText: 'Built at UniHack, Museum track.',
-    roles: ['Frontend', 'Backend', 'AR', 'Design'], footer: 'Made in Timișoara for UniHack.',
-    back: 'Back to site', video: 'Video of the place', history: 'Then and now', drag: 'Drag to compare',
+    roles: ['Frontend', 'Backend', 'Backend', 'AR modelling'], footer: 'Made in Timișoara for UniHack.',
+    back: 'Go to the main page', video: 'Video of the place', history: 'Then and now', drag: 'Drag to compare',
     then: 'Then', now: 'Now', checkin: 'Check in here', checked: 'Checked in. +100 points (demo).', videoNote: 'Add public/media/…mp4 to play the video.',
   },
   ro: {
-    appName: 'TimeHunt', nav: ['Cum funcționează', 'Previzualizare', 'Locuri', 'Echipa'],
+    appName: 'TimeHunt',
+    store: 'Descarcă aplicația', getApp: 'Descarcă',
+    moreTitle: 'Vrei să descoperi mai mult din Timișoara?',
+    moreText: 'Descarcă aplicația ca să faci check-in la locuri, să urci în clasament și să vezi trecutul orașului în AR.',
+    dlTitle: 'Gata să vânezi prin timp?', dlText: 'Descarcă aplicația și fă primul tău check-in.',nav: ['Cum funcționează', 'Previzualizare', 'Locuri', 'Echipa'],
     heroTitle: 'Plimbă-te prin Timișoara. Vezi-o așa cum a fost.',
     heroText: 'Vizitează locuri reale din oraș, fă check-in ca să urci în clasament și îndreaptă camera spre trecut, în realitate augmentată.',
     cta: 'Vezi locurile', cta2: 'Cunoaște echipa',
@@ -29,7 +38,7 @@ export const T = {
     placesTitle: 'Cinci locuri, cinci coduri QR', placesText: 'Scanează un cod la fața locului ca să deschizi pagina acelui loc. Două sunt active în demo.',
     open: 'Deschide pagina demo', soon: 'În curând', teamTitle: 'Echipa', teamText: 'Creat la UniHack, secțiunea Muzeu.',
     roles: ['Frontend', 'Backend', 'Design', 'AR'], footer: 'Făcut în Timișoara pentru UniHack.',
-    back: 'Înapoi la site', video: 'Video cu locul', history: 'Atunci și acum', drag: 'Trage pentru a compara',
+    back: 'Mergi la pagina principală', video: 'Video cu locul', history: 'Atunci și acum', drag: 'Trage pentru a compara',
     then: 'Atunci', now: 'Acum', checkin: 'Fă check-in aici', checked: 'Check-in făcut. +100 puncte (demo).', videoNote: 'Adaugă public/media/…mp4 pentru a reda videoul.',
   },
 }
