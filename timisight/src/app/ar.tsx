@@ -1,4 +1,5 @@
-import { router } from 'expo-router';
+import { router, useFocusEffect } from 'expo-router';
+import { useCallback, useRef } from 'react';
 import { Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -24,10 +25,32 @@ const UnityView =
 export default function ArScreen() {
   const insets = useSafeAreaInsets();
 
+  // Unity-as-a-Library can only boot ONCE per process: the wrapper's
+  // `ReactNativeUnity.java` refuses to recreate the player after a QUIT (`_isUnityQuit`).
+  // So leaving `/ar` must perform a CLEAN UNLOAD, never a quit — a clean unload resets
+  // the wrapper state and permits a later re-create, so re-entering `/ar` works again.
+  //
+  // The wrapper already unloads (not quits) on React unmount (`componentWillUnmount` →
+  // `Commands.unloadUnity`). We reinforce that here with an explicit, deterministic
+  // unload when the screen loses focus / is torn down, rather than relying solely on the
+  // native unmount path. (The standalone Unity launcher activity — which WAS what quit
+  // Unity in-process — is removed by the `withUnityArcore` config plugin; that removal is
+  // what actually prevents the quit-poisoned state. This ref/unload is belt-and-braces.)
+  const unityRef = useRef<InstanceType<NonNullable<typeof UnityView>> | null>(null);
+
+  useFocusEffect(
+    useCallback(() => {
+      // No Unity on web (UnityView is null) — nothing to clean up there.
+      return () => {
+        unityRef.current?.unloadUnity?.();
+      };
+    }, [])
+  );
+
   return (
     <View style={styles.root}>
       {UnityView ? (
-        <UnityView fullScreen style={{ flex: 1 }} />
+        <UnityView ref={unityRef} fullScreen style={{ flex: 1 }} />
       ) : (
         <View style={styles.webFallback}>
           <Text style={styles.webText}>AR is only available on device.</Text>

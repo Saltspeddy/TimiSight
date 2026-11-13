@@ -24,9 +24,29 @@ output so future builds can skip Unity.
   `android/local.properties` with `sdk.dir=...` (the prebuild/run step can generate
   one). A matching **NDK** installed.
 - **Node + the app repo dependencies** installed (`npm install` / `bun install`).
+  `npm install` also runs `patch-package` (postinstall) to fix the Unity wrapper's
+  gradle — do not skip it.
 - A **physical, ARCore-capable Android device** connected over USB with USB debugging
   on. An emulator will not do geospatial AR.
 - The **Unity export** placed locally (next step).
+
+### Windows-specific prerequisites (read if building on Windows)
+
+- **MAX_PATH / 260-character path limit.** Unity's IL2CPP native build creates very
+  deeply nested paths that exceed Windows' legacy 260-char limit, which breaks the
+  build. Two mitigations, use both:
+  1. Keep the project **close to a drive root** (e.g. `D:\visittm`), not nested under
+     long `Documents\...\...` paths.
+  2. The config plugin already redirects the CMake staging dir to a short path on
+     Windows (`<drive>:/cxx_app`, inside the `android {}` block of
+     `android/app/build.gradle`). To override where that goes, set the
+     `UNITY_CXX_STAGING_DIR` environment variable to a short path before building.
+  Optionally also enable long paths globally: `git config --system core.longpaths true`
+  and set `HKLM\SYSTEM\CurrentControlSet\Control\FileSystem\LongPathsEnabled=1`.
+- **JDK version.** The build is sensitive to the Java version. If you hit Java/Gradle
+  version errors, align your JDK with the one known to work for this project (a
+  teammate had to downgrade their JDK). Point `JAVA_HOME` at that JDK, or let Android
+  Studio's embedded JDK drive the build.
 
 ---
 
@@ -128,6 +148,41 @@ IL2CPP compiler — could consume this prebuilt `.aar` instead of recompiling.
 
 ---
 
+## Runtime / UaaL notes
+
+A few things about how the embedded Unity (Unity-as-a-Library) behaves at runtime, and
+why the integration is shaped the way it is:
+
+- **No duplicate launcher icon / no standalone Unity entry point.** The ARCore export was
+  produced as a *standalone* Unity app, so its library manifest
+  (`unity/builds/android/unityLibrary/src/main/AndroidManifest.xml`) declared LAUNCHER/MAIN
+  and `ar_gara_apk3` deep-link `<intent-filter>`s on both Unity activities. Those put a
+  second "visittm" icon on the device and let Unity open as its own app. The
+  `withUnityArcore` plugin now strips exactly those two intent-filter kinds from both
+  activities (leaving the activities, their meta-data, the ARCore API key, permissions and
+  `uses-feature` intact). Unity is rendered only *in-process*, inside the RN `/ar` screen,
+  via the `@azesmway/react-native-unity` wrapper.
+
+- **Unity can only boot once per process → `/ar` does a CLEAN unload, never a quit.**
+  Unity-as-a-Library cannot be re-initialized within the same process after it QUITS: the
+  wrapper's `ReactNativeUnity.java` sets `_isUnityQuit` and refuses to recreate the player.
+  A standalone Unity entry point was what quit Unity in-process, which is why re-opening
+  `/ar` afterwards used to show only the logo and hang. With the launcher activities
+  stripped (above), leaving `/ar` performs a clean *unload* instead: the wrapper unloads on
+  React unmount, reinforced by a `useFocusEffect` cleanup in `src/app/ar.tsx` that calls
+  `unloadUnity()` when the screen loses focus. A clean unload resets the wrapper state, so
+  re-entering `/ar` reinitializes Unity and works again. The Close button and the Android
+  hardware back button both go through this path.
+
+- **If returning-to-RN instability persists (Phase 2, NOT done yet).** If, after an
+  on-device retest, re-entering AR is still unstable, the next step is to run Unity in a
+  *separate Android process* (so each AR session gets a fresh process and the once-per-
+  process limit no longer bites). That is **not implemented** — there is intentionally no
+  `android:process` configuration anywhere yet. Treat it as the fallback only if the
+  clean-unload approach above proves insufficient in testing.
+
+---
+
 ## Troubleshooting
 
 - **Gradle can't find the SDK / NDK, or complains about a `C:/...` path:** the config
@@ -135,9 +190,20 @@ IL2CPP compiler — could consume this prebuilt `.aar` instead of recompiling.
   SDK/NDK. Set `ANDROID_HOME` (or add `sdk.dir=...` to `android/local.properties`) and
   install a matching NDK, then re-run `npx expo prebuild --clean`.
 - **IL2CPP task fails referencing `unity.androidSdkPath` / `unity.androidNdkPath`:**
-  those keys were stripped on purpose (they pointed at a nonexistent `C:/` path). If
-  the task still needs them, pass your own paths as Gradle properties, e.g.
-  `npx expo run:android -- -Punity.androidSdkPath=$ANDROID_HOME -Punity.androidNdkPath=/path/to/ndk`.
+  those Windows keys are stripped, and the config plugin rewrites the IL2CPP task to
+  resolve the SDK/NDK from *your* machine instead: the SDK from `sdk.dir`
+  (`android/local.properties`) or `ANDROID_HOME`/`ANDROID_SDK_ROOT`, and the NDK from
+  `<sdk>/ndk/<ndkVersion>` (the `ndkVersion` AGP already installs). So no `-P` flags are
+  needed — just ensure the SDK is discoverable and a matching NDK is installed, then
+  re-run `npx expo prebuild --clean`. If it still fails, check that
+  `android/local.properties` has a valid `sdk.dir` (or `ANDROID_HOME` is set) and that
+  the NDK version named in `unity/builds/android/unityLibrary/build.gradle` (`ndkVersion`)
+  is installed under `<sdk>/ndk/`.
+- **Build runs out of memory (`Java heap space`, often during `JetifyTransform`):** the
+  config plugin sets `org.gradle.jvmargs=-Xmx6144m`; this needs ~8 GB+ free RAM. Close
+  the Unity Editor and other heavy apps while building. If it still OOMs, tell the
+  maintainer — disabling Jetifier (`android.enableJetifier=false`) is the next step to
+  test, since modern RN/Expo don't need it.
 - **`xrmanifest.androidlib` project not found:** confirm
   `unity/builds/android/unityLibrary/xrmanifest.androidlib/` exists in the unzipped
   export, then re-run prebuild (the local plugin includes that submodule).
@@ -146,3 +212,15 @@ IL2CPP compiler — could consume this prebuilt `.aar` instead of recompiling.
   machine with the Unity Android toolchain.
 - **`unity/builds/` shows up in git status:** it should be ignored. Check `.gitignore`
   still has the `unity/builds/` entry; never commit the raw export.
+- **`Failed to apply plugin 'com.facebook.react.rootproject'` →
+  `Could not set unknown property 'react.newArchEnabled' for project
+  ':unityLibrary:xrmanifest.androidlib'`:** React Native's root project plugin sweeps
+  every Gradle subproject and calls `setProperty("react.newArchEnabled", ...)` on each
+  one; that throws on the plain `com.android.library` Unity modules, which have no such
+  settable property. The config plugin (`plugins/withUnityArcore.js`) fixes this by
+  injecting a small `ext { set('react.newArchEnabled', 'true'); set('newArchEnabled',
+  'true') }` shim (marked with the `expo-unity-newarch-shim` sentinel) into both
+  `unity/builds/android/unityLibrary/build.gradle` and
+  `unity/builds/android/unityLibrary/xrmanifest.androidlib/build.gradle`. If you see
+  this error after a **fresh Unity re-export** (which overwrites those files and drops
+  the shim), just re-run `npx expo prebuild --clean` — prebuild re-applies the shim.
