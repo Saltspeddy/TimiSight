@@ -45,3 +45,7 @@ yarn-error.log*
 next-env.d.ts
 
 *.code-workspace
+
+node_modules/
+.next/
+.env*
