@@ -115,6 +115,40 @@
   .profile-details > div { grid-template-columns: 1fr; gap: 0.1rem; }
 }
 
+/* --- Points balance banner --- */
+.points-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.9rem 1.1rem;
+  margin-bottom: 0.9rem;
+  background: var(--yellow);
+  border: 3px solid var(--ink);
+  border-radius: 12px;
+  box-shadow: 4px 4px 0 var(--ink);
+}
+.points-banner span { font-weight: 800; }
+.points-banner b { font-size: 1.8rem; font-weight: 800; letter-spacing: -0.02em; }
+
+/* --- Link to the combined shop + leaderboard page --- */
+.profile-links { display: flex; gap: 0.6rem; flex-wrap: wrap; }
+.profile-link-btn {
+  font-weight: 800;
+  font-size: 0.9rem;
+  text-decoration: none;
+  cursor: pointer;
+  background: var(--blue);
+  color: #fff;
+  border: 2px solid var(--ink);
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  box-shadow: 3px 3px 0 var(--ink);
+  transition: transform 0.1s, box-shadow 0.1s;
+}
+.profile-link-btn.ghost { background: var(--yellow); color: var(--ink); }
+.profile-link-btn:hover { transform: translate(2px, 2px); box-shadow: 1px 1px 0 var(--ink); }
+
 @media (prefers-reduced-motion: reduce) {
   .profile * { transition: none !important; }
 }

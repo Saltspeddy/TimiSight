@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { getMyPoints } from "@/lib/shop-db";
 import { signOut } from "../auth/actions";
 import "./profile.css";
 
@@ -30,6 +31,14 @@ export default async function ProfilePage() {
       })
     : "—";
 
+  // A small points summary is account info; the shop + leaderboard live on the
+  // combined /play page.
+  const points = (await getMyPoints(supabase)) ?? {
+    user_id: user.id,
+    balance: 0,
+    lifetime: 0,
+  };
+
   return (
     <div className="profile">
       <div className="profile-card">
@@ -53,7 +62,16 @@ export default async function ProfilePage() {
           </div>
         </div>
 
-        <h2>Account details</h2>
+        {/* Points summary + link to the combined shop + leaderboard page */}
+        <div className="points-banner">
+          <span>Points balance</span>
+          <b>{points.balance}</b>
+        </div>
+        <div className="profile-links">
+          <Link className="profile-link-btn" href="/play">Shop &amp; leaderboard</Link>
+        </div>
+
+        <h2 style={{ marginTop: "1.8rem" }}>Account details</h2>
         <dl className="profile-details">
           <div>
             <dt>Name</dt>

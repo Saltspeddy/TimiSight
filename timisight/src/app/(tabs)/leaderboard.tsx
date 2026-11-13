@@ -2,7 +2,7 @@ import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { LEADERBOARD } from '@/constants/site-data';
-import { BORDER, Brand } from '@/constants/brand';
+import { Brand } from '@/constants/brand';
 import { useLang } from '@/hooks/use-lang';
 
 export default function LeaderboardScreen() {
