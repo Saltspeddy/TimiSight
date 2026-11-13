@@ -42,6 +42,13 @@ export const T = {
     shopUnlimited: 'unlimited',
     shopLeft: 'left',
     shopNotEnough: 'Not enough points',
+    shopActiveTitle: 'Active perks',
+    shopActiveEmpty: 'No active perks yet. Redeem a pass below.',
+    shopActivate: 'Activate',
+    shopActive: 'Active',
+    shopDeactivate: 'Deactivate',
+    shopClaim: 'Claim',
+    shopClaimed: 'claimed',
     footer: 'Made in Timișoara for UniHack.',
   },
   ro: {
@@ -83,6 +90,13 @@ export const T = {
     shopUnlimited: 'nelimitat',
     shopLeft: 'rămase',
     shopNotEnough: 'Puncte insuficiente',
+    shopActiveTitle: 'Beneficii active',
+    shopActiveEmpty: 'Niciun beneficiu activ încă. Revendică un abonament mai jos.',
+    shopActivate: 'Activează',
+    shopActive: 'Activ',
+    shopDeactivate: 'Dezactivează',
+    shopClaim: 'Revendică',
+    shopClaimed: 'revendicate',
     footer: 'Făcut în Timișoara pentru UniHack.',
   },
 } as const;
@@ -160,11 +174,20 @@ export const LEADERBOARD: { name: string; points: number }[] = [
 // above; a real build would read this from the points ledger.
 export const MY_POINTS = 1020;
 
+// A perk is either:
+//   'repeatable' — claimable on demand any number of times (e.g. a free coffee);
+//                  each claim spends points but never locks the offer.
+//   'active'     — a pass you hold in an active/not-active state (e.g. a museum or
+//                  transport pass); redeeming it spends points once and marks it
+//                  ACTIVE until you deactivate it.
+export type OfferKind = 'repeatable' | 'active';
+
 export type Offer = {
   id: string;
   partner: string;
   cost: number; // price in points
   stock: number | null; // null = unlimited
+  kind: OfferKind;
   title: Record<Lang, string>;
 };
 
@@ -175,6 +198,7 @@ export const OFFERS: Offer[] = [
     partner: 'Partner café',
     cost: 120,
     stock: null,
+    kind: 'repeatable',
     title: { en: 'Free coffee', ro: 'Cafea gratuită' },
   },
   {
@@ -182,6 +206,7 @@ export const OFFERS: Offer[] = [
     partner: 'National Museum',
     cost: 400,
     stock: 25,
+    kind: 'active',
     title: { en: 'Museum day pass', ro: 'Bilet muzeu pe o zi' },
   },
   {
@@ -189,6 +214,7 @@ export const OFFERS: Offer[] = [
     partner: 'STPT',
     cost: 2000,
     stock: 0,
+    kind: 'active',
     title: { en: 'Monthly tram pass', ro: 'Abonament tramvai lunar' },
   },
 ];

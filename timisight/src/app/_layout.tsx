@@ -4,8 +4,13 @@ import { useColorScheme } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import { AnimatedSplashOverlay } from '@/components/animated-icon';
+import { hydratePerks } from '@/hooks/use-perks';
 
 SplashScreen.preventAutoHideAsync();
+
+// Load persisted points/perks from disk once, before the UI reads the store, so a
+// returning user sees their saved balance and active perks immediately.
+void hydratePerks();
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
