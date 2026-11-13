@@ -41,13 +41,3 @@ example
 # generated native folders
 /ios
 /android
-
-# Unity-as-a-Library export (local only)
-# unity/builds/ holds the ~1.5 GB Android export (unityLibrary/ + shared/ + gradle
-# files) produced by Unity. It is far too large for git and is transferred between
-# machines as a zip, so it is never committed. See BUILD_ANDROID.md.
-unity/builds/
-# unity/prebuilt/ is the OPPOSITE: it is meant to be tracked. It will later hold a
-# captured unityLibrary-release.aar (+ libil2cpp.so) so the app can rebuild without
-# Unity. Keep it out of the ignore above.
-!unity/prebuilt/

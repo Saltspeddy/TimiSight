@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "visitTM",
-    "slug": "visittm",
+    "name": "TimiSight",
+    "slug": "timisight",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "visittm",
+    "scheme": "timisight",
     "userInterfaceStyle": "automatic",
     "ios": {
       "icon": "./assets/expo.icon"
@@ -18,7 +18,7 @@
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
-      "package": "com.anonymous.visittm"
+      "package": "com.anonymous.timisight"
     },
     "web": {
       "output": "server",
@@ -33,9 +33,7 @@
           "image": "./assets/images/splash-icon.png",
           "imageWidth": 76
         }
-      ],
-      "@azesmway/react-native-unity",
-      "./plugins/withUnityArcore"
+      ]
     ],
     "experiments": {
       "typedRoutes": true,

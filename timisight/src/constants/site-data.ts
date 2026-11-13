@@ -1,11 +1,11 @@
-// Shared content for visitTM, ported from the uniprep website (lib/site-data.ts).
+// Shared content for TimiSight, ported from the uniprep website (lib/site-data.ts).
 // Keep this in sync with the web app so both show the same copy and places.
 
 export type Lang = 'en' | 'ro';
 
 export const T = {
   en: {
-    appName: 'visitTM',
+    appName: 'TimiSight',
     tabs: { home: 'Home', places: 'Places', board: 'Leaderboard' },
     heroTitle: 'Walk Timișoara. See it as it was.',
     heroText:
@@ -37,7 +37,7 @@ export const T = {
     footer: 'Made in Timișoara for UniHack.',
   },
   ro: {
-    appName: 'visitTM',
+    appName: 'TimiSight',
     tabs: { home: 'Acasă', places: 'Locuri', board: 'Clasament' },
     heroTitle: 'Plimbă-te prin Timișoara. Vezi-o așa cum a fost.',
     heroText:

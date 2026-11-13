@@ -43,12 +43,6 @@ export default function HomeScreen() {
               style={({ pressed }) => [styles.btn, pressed && styles.btnPressed]}>
               <Text style={styles.btnText}>{t.cta}</Text>
             </Pressable>
-
-            <Pressable
-              onPress={() => router.push('/ar')}
-              style={({ pressed }) => [styles.btn, styles.btnAlt, pressed && styles.btnPressed]}>
-              <Text style={styles.btnText}>Open AR</Text>
-            </Pressable>
           </View>
         </View>
 
@@ -134,7 +128,6 @@ const styles = StyleSheet.create({
     ...hardShadow(4),
   },
   btnPressed: { transform: [{ translateX: 2 }, { translateY: 2 }], ...hardShadow(2) },
-  btnAlt: { backgroundColor: Brand.orange },
   btnText: { color: '#fff', fontWeight: '800', fontSize: 16 },
   ctaRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 12, alignItems: 'center' },
 
