@@ -1,0 +1,16 @@
+{
+  "verdict": "APPROVED",
+  "findings": [
+    {
+      "label": "Verification evidence for THIS change not recorded in-repo",
+      "severity": "non-blocking",
+      "detail": "The tsc/lint results in plan.md describe the prior Option 2 iteration (ar.tsx useFocusEffect -> unloadUnity), not this Option B diff. A reviewer-run project-wide `tsc --noEmit` shows the AR files (unity-ar-host.tsx, ar.tsx, _layout.tsx) clean; the only errors are two pre-existing, unrelated CSS-module side-effect import errors in animated-icon.web.tsx and theme.ts, which are not in this diff. Have the coder record `npx tsc --noEmit` and `npx expo lint` output for the Option B change so the gate rests on the coder's own evidence rather than a reviewer spot-check."
+    },
+    {
+      "label": "Hidden surface relies on resource suspension happening Unity-side",
+      "severity": "non-blocking",
+      "detail": "The RN side keeps <UnityView> mounted and hidden (opacity:0 + translateX:100000 + pointerEvents:none), so camera/GL/ARCore stay held until the Unity-side ReactNativeBridge `hold` handler suspends them. This is correct per Option B's accepted tradeoff, but the memory/camera residency is only acceptable if the Unity handler actually runs. Verify on-device that `hold` releases the camera and suspends the session/Cesium. Out of RN scope."
+    }
+  ],
+  "reviewDoc": "/home/chris/WORK/Coding Projects/Unihack/Unihack2026/UniHack_2026_PreComp/visittm/.agents/tasks/ar-reopen-review.md"
+}

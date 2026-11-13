@@ -115,7 +115,8 @@ npx expo run:android          # build + install on the connected device
 
 In the app: open the **Home** tab and tap **Open AR** to launch the full-screen Unity
 AR view. Tap **Close** (or use the Android back button) to return — leaving the screen
-unloads the Unity engine.
+hides the (persistent) Unity surface and suspends the AR session; it does **not** unload
+the engine (see Runtime / UaaL notes below).
 
 ---
 
@@ -163,23 +164,50 @@ why the integration is shaped the way it is:
   `uses-feature` intact). Unity is rendered only *in-process*, inside the RN `/ar` screen,
   via the `@azesmway/react-native-unity` wrapper.
 
-- **Unity can only boot once per process → `/ar` does a CLEAN unload, never a quit.**
-  Unity-as-a-Library cannot be re-initialized within the same process after it QUITS: the
-  wrapper's `ReactNativeUnity.java` sets `_isUnityQuit` and refuses to recreate the player.
-  A standalone Unity entry point was what quit Unity in-process, which is why re-opening
-  `/ar` afterwards used to show only the logo and hang. With the launcher activities
-  stripped (above), leaving `/ar` performs a clean *unload* instead: the wrapper unloads on
-  React unmount, reinforced by a `useFocusEffect` cleanup in `src/app/ar.tsx` that calls
-  `unloadUnity()` when the screen loses focus. A clean unload resets the wrapper state, so
-  re-entering `/ar` reinitializes Unity and works again. The Close button and the Android
-  hardware back button both go through this path.
+- **Unity can only boot once per process → ONE persistent UnityView, never unloaded
+  (Option B).** Unity-as-a-Library cannot be re-initialized within the same process. An
+  earlier design unloaded Unity on leaving `/ar` (`UnityPlayer.unload()` via a
+  `useFocusEffect` cleanup) and reinitialized it on re-entry. For this ARCore/geospatial
+  build that **crashed the app on the second open**: Unity never reports
+  `onUnityPlayerUnloaded`, so the wrapper deferred the second create (blank screen) and,
+  after a 5 s safety-net timeout, booted a SECOND `UnityPlayer` in the same process — which
+  UaaL does not support. (Full root-cause trace:
+  `.agents/tasks/ar-reopen-crash-investigation.md`.)
+
+  The fix mounts a **single `<UnityView>` once**, in `UnityArProvider`
+  (`src/components/unity-ar-host.tsx`), as a sibling of the router `<Stack>` in
+  `src/app/_layout.tsx`. It is **never unmounted** between AR sessions, so `unloadUnity()`
+  is never called on navigation and the reinit crash path cannot occur. The `/ar` screen
+  (`src/app/ar.tsx`) is just a controller: on focus it reveals the surface; on blur it
+  hides it (kept mounted via `opacity: 0` + off-screen + `pointerEvents="none"`). The
+  provider also sets the wrapper's `androidKeepPlayerMounted` prop so Android window-blur
+  pauses rather than tears down. The Close button lives in the provider overlay (layered
+  above the native surface so it stays tappable) and calls `router.back()`.
+
+- **Explicit hold/resume signals → requires the Unity-side `ReactNativeBridge` handler.**
+  Because the persistent surface is only *covered* (not unmounted) when leaving `/ar`, the
+  wrapper's automatic window-focus pause does not fire. So on blur/focus the RN side sends
+  explicit signals to Unity via `postMessage`:
+  `postMessage('ReactNativeBridge', 'OnHostMessage', 'hold')` on leave and `'resume'` on
+  return. These drive a C# handler in the Unity project
+  (`Unihack_2026_AR_QR_AND_DISTANCE/Assets/ReactNativeBridge.cs`) that suspends/resumes the
+  AR session, camera feed and Cesium tiles. Contract doc:
+  `Unihack_2026_AR_QR_AND_DISTANCE/REACT_NATIVE_BRIDGE_CONTRACT.md`.
+
+  > ⚠️ **This handler must be in the Unity export you build from.** `ReactNativeBridge.cs`
+  > lives in the Unity project, not in `unity/builds/`. If you build from an export zip
+  > produced **before** that script was added, the `ReactNativeBridge` GameObject will not
+  > exist: `hold`/`resume` are delivered to nothing (no crash, but the camera is not
+  > released on leave and AR does not resume on return). **Re-export the Unity Android
+  > project after confirming `ReactNativeBridge.cs` compiles**, then re-place it at
+  > `unity/builds/android/` (Step 1) before prebuilding.
 
 - **If returning-to-RN instability persists (Phase 2, NOT done yet).** If, after an
   on-device retest, re-entering AR is still unstable, the next step is to run Unity in a
   *separate Android process* (so each AR session gets a fresh process and the once-per-
   process limit no longer bites). That is **not implemented** — there is intentionally no
   `android:process` configuration anywhere yet. Treat it as the fallback only if the
-  clean-unload approach above proves insufficient in testing.
+  persistent-instance approach above proves insufficient in testing.
 
 ---
 

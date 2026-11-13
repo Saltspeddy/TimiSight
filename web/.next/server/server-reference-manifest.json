@@ -1,0 +1,78 @@
+{
+  "node": {
+    "008bec7c12f8724057b0b84b18504cb68025ae9bee": {
+      "workers": {
+        "app/login/page": {
+          "moduleId": 56787,
+          "async": false
+        },
+        "app/profile/page": {
+          "moduleId": 44449,
+          "async": false
+        },
+        "app/signup/page": {
+          "moduleId": 36348,
+          "async": false
+        }
+      },
+      "filename": "app/auth/actions.ts",
+      "exportedName": "signOut"
+    },
+    "40aefd0b7a0376fe1a49fc46c1e8bdd7087a43fccd": {
+      "workers": {
+        "app/login/page": {
+          "moduleId": 56787,
+          "async": false
+        },
+        "app/profile/page": {
+          "moduleId": 44449,
+          "async": false
+        },
+        "app/signup/page": {
+          "moduleId": 36348,
+          "async": false
+        }
+      },
+      "filename": "app/auth/actions.ts",
+      "exportedName": "signInWithGoogle"
+    },
+    "6034f472b32bf293f00c36db0ca85c8b075cb66c59": {
+      "workers": {
+        "app/login/page": {
+          "moduleId": 56787,
+          "async": false
+        },
+        "app/profile/page": {
+          "moduleId": 44449,
+          "async": false
+        },
+        "app/signup/page": {
+          "moduleId": 36348,
+          "async": false
+        }
+      },
+      "filename": "app/auth/actions.ts",
+      "exportedName": "signIn"
+    },
+    "6082bde9ea7dd0a9c255b81d11e51107df11d372ec": {
+      "workers": {
+        "app/login/page": {
+          "moduleId": 56787,
+          "async": false
+        },
+        "app/profile/page": {
+          "moduleId": 44449,
+          "async": false
+        },
+        "app/signup/page": {
+          "moduleId": 36348,
+          "async": false
+        }
+      },
+      "filename": "app/auth/actions.ts",
+      "exportedName": "signUp"
+    }
+  },
+  "edge": {},
+  "encryptionKey": "H6/JLYVJSClIaslqKVFW5XX3IPPCYCIyg1XZzcj0+Ms="
+}
