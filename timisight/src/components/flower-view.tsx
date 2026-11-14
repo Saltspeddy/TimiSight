@@ -7,19 +7,20 @@ import { FlowerIcon, tint } from '@/components/flower-icon';
 import { FlowerStory } from '@/components/flower-story';
 
 import { BORDER, Brand, hardShadow } from '@/constants/brand';
-import { checkIn, collectedIds, type CheckInResult } from '@/constants/collection';
+import { checkIn, useCollection, type CheckInResult } from '@/constants/collection';
 import type { Lang } from '@/constants/site-data';
+import { useAuth } from '@/hooks/auth';
 import { useFlowers } from '@/hooks/use-flowers';
 import { useLang } from '@/hooks/use-lang';
 
 const TXT = {
-  en: { watch: '▶ Watch the story', checked: 'Flower collected', already: 'Already in your bouquet', alreadySub: 'Each flower pays points once.',
-    total: 'Total', pts: 'pts', tap: 'Tap this flower’s NFC tag to collect it and earn points.', sim: 'Simulate NFC tap (demo)',
-    flower: 'The flower', place: 'The place', rewards: 'Rewards nearby', bouquet: 'Your bouquet',
+  en: { watch: '▶ Watch the story', checked: 'Checked in', already: 'You already have it in your garden', alreadySub: 'Each flower pays points once.',
+    total: 'Total', pts: 'pts', tap: 'Tap this flower’s NFC tag to check in and earn points.', sim: 'Simulate NFC tap (demo)',
+    flower: 'The flower', place: 'The place', rewards: 'Rewards nearby', bouquet: 'Your garden',
     ranking: 'Garden ranking', notFound: 'Flower not found' },
-  ro: { watch: '▶ Vezi povestea', checked: 'Floare colectată', already: 'Deja în buchetul tău', alreadySub: 'Fiecare floare oferă puncte o singură dată.',
-    total: 'Total', pts: 'puncte', tap: 'Atinge eticheta NFC a acestei flori ca s-o colecționezi și să câștigi puncte.', sim: 'Simulează atingerea NFC (demo)',
-    flower: 'Floarea', place: 'Locul', rewards: 'Recompense în apropiere', bouquet: 'Buchetul tău',
+  ro: {watch: '▶ Watch the story', checked: 'Check-in făcut', already: 'O ai deja în grădina ta', alreadySub: 'Fiecare floare oferă puncte o singură dată.',
+    total: 'Total', pts: 'puncte', tap: 'Atinge eticheta NFC a acestei flori ca să faci check-in și să câștigi puncte.', sim: 'Simulează atingerea NFC (demo)',
+    flower: 'Floarea', place: 'Locul', rewards: 'Recompense în apropiere', bouquet: 'Grădina ta',
     ranking: 'Clasamentul grădinii', notFound: 'Floarea nu a fost găsită' },
   de: { watch: '▶ Geschichte ansehen', checked: 'Blume gesammelt', already: 'Schon in deinem Strauß', alreadySub: 'Jede Blume bringt nur einmal Punkte.',
     total: 'Gesamt', pts: 'Punkte', tap: 'Halte dein Handy an den NFC-Tag dieser Blume, um sie zu sammeln und Punkte zu verdienen.', sim: 'NFC-Berührung simulieren (Demo)',
@@ -48,24 +49,42 @@ export function FlowerView({ id, scanned = false }: { id: string; scanned?: bool
   const [lang, t] = useLang();
   const x = TXT[lang];
   const insets = useSafeAreaInsets();
+  const { isAuthenticated } = useAuth();
   const flowers = useFlowers();
+  const collection = useCollection();
   const flower = flowers.find((f) => f.id === id);
   const [result, setResult] = useState<CheckInResult | null>(null);
   const [story, setStory] = useState(false);
   const ran = useRef(false);
 
   // The check-in happens once, automatically, when the screen is opened from a tag.
+  // It is async now (writes to the DB), so the result is applied inside the async body.
+  // The `ran` guard ensures the RPC fires exactly once even across re-renders.
   useEffect(() => {
     if (!scanned || !flower || ran.current) return;
+    // A signed-out scan cannot write (RLS would reject it); skip the RPC and leave the
+    // screen as a normal flower view. The `ran` guard still prevents a retry loop.
+    if (!isAuthenticated) return;
     ran.current = true;
-    // One-time check-in when the screen is opened from a scanned tag. The
-    // `ran` guard ensures this runs exactly once, so setting state here does
-    // not cause a render loop.
-    const res = checkIn(flower);
-    setResult(res);
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    if (!res.already) setStory(true);
-  }, [scanned, flower]);
+
+    let active = true;
+    (async () => {
+      try {
+        const res = await checkIn(flower.id);
+        if (!active) return;
+        setResult(res);
+        if (!res.already) setStory(true);
+      } catch (e) {
+        // Server rejected the check-in (e.g. transient error / unknown flower).
+        // Leave the UI unchanged; the `ran` guard prevents an automatic retry.
+        console.warn('[flower-view] check-in failed:', e);
+      }
+    })();
+
+    return () => {
+      active = false;
+    };
+  }, [scanned, flower, isAuthenticated]);
 
   const goBack = () => (router.canGoBack() ? router.back() : router.replace('/'));
 
@@ -78,11 +97,8 @@ export function FlowerView({ id, scanned = false }: { id: string; scanned?: bool
     );
   }
 
-  // The subtitle under the flower's name is its name in another language. It used to be
-  // "the other one of two". With five languages, show the local name (Romanian) to
-  // everyone, and English to Romanian readers.
-  const other: Lang = lang === 'ro' ? 'en' : 'ro';
-  const owned = collectedIds()
+  const other: Lang = lang === 'en' ? 'ro' : 'en';
+  const owned = collection.collectedIds
     .map((fid) => flowers.find((f) => f.id === fid))
     .filter((f) => !!f);
 

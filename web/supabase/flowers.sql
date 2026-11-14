@@ -46,7 +46,7 @@ create policy "anyone reads active flowers" on flowers
   for select using (active);
 
 -- ---------------------------------------------------------------------------
--- Seed the two existing flowers (upsert, so re-running just refreshes content).
+-- Seed the flowers (upsert, so re-running just refreshes content).
 -- ---------------------------------------------------------------------------
 insert into flowers (id, name_en, name_ro, latin_name, place_en, place_ro, character_en, character_ro, color, points, sort_order)
 values
@@ -69,6 +69,16 @@ values
     'A hop flower that remembers the breweries and the daily life they supported.',
     'O floare de hamei care își amintește fabricile de bere și viața pe care o susțineau.',
     '#9fd56b', 50, 2
+  ),
+  (
+    'tram-flower',
+    'Tram Flower', 'Floarea din tramvai',
+    null,
+    'Placed near the Miclosi museum, where the city''s history is kept indoors and the tram flowers keep it moving outside.',
+    'Amplasată lângă muzeul Miclosi, unde istoria orașului stă la adăpost înăuntru, iar florile din tramvai o țin în mișcare afară.',
+    'One flower pushes another along on a tram, a small story about helping a friend along the way.',
+    'O floare împinge o altă floare într-un tramvai, o mică poveste despre ajutorul dat unui prieten pe drum.',
+    '#6cb4e4', 50, 3
   )
 on conflict (id) do update set
   name_en = excluded.name_en,

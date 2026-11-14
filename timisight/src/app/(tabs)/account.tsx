@@ -4,18 +4,24 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { LanguagePicker } from '@/components/language-picker';
 import { BORDER, Brand, hardShadow } from '@/constants/brand';
-import { LEADERBOARD, ME } from '@/constants/site-data';
+import { useCollection } from '@/constants/collection';
+import { ME } from '@/constants/site-data';
 import { useAuth } from '@/hooks/auth';
 import { useLang } from '@/hooks/use-lang';
+import { useLeaderboard } from '@/hooks/use-leaderboard';
 
 export default function AccountScreen() {
   const [, t] = useLang();
   const insets = useSafeAreaInsets();
   const { user, isLoading, signOut } = useAuth();
+  // Real balance from the unified ledger (same points earned by scanning flowers).
+  const { total } = useCollection();
 
-  // Derive this player's rank from the shared leaderboard data (demo).
-  const ranked = [...LEADERBOARD].sort((a, b) => b.points - a.points);
-  const rank = ranked.findIndex((r) => r.name === ME.name) + 1;
+  // Real rank from the DB leaderboard: the signed-in user's position in the ranking.
+  // `useLeaderboard` is ordered by lifetime desc, so the index is the rank. 0 (not found)
+  // means the user has no points yet → shown as '—'.
+  const ranked = useLeaderboard();
+  const rank = user ? ranked.findIndex((r) => r.sub === user.sub) + 1 : 0;
 
   // The signed-in display name falls back to the demo "You" when the profile omits it.
   const displayName = user?.name ?? user?.email ?? ME.name;
@@ -63,7 +69,7 @@ export default function AccountScreen() {
         <View style={styles.banner}>
           <Text style={styles.bannerLabel}>{t.accountBalance}</Text>
           <Text style={styles.bannerValue}>
-            {ME.points} {t.points}
+            {total} {t.points}
           </Text>
         </View>
 
@@ -72,7 +78,7 @@ export default function AccountScreen() {
           <View style={styles.row}>
             <Text style={styles.dt}>{t.accountLifetime}</Text>
             <Text style={styles.dd}>
-              {ME.lifetime} {t.points}
+              {total} {t.points}
             </Text>
           </View>
           <View style={styles.row}>

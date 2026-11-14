@@ -5,13 +5,12 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import { AnimatedSplashOverlay } from '@/components/animated-icon';
 import { AuthProvider, useAuth } from '@/hooks/auth';
-import { hydratePerks } from '@/hooks/use-perks';
 
 SplashScreen.preventAutoHideAsync();
 
-// Load persisted points/perks from disk once, before the UI reads the store, so a
-// returning user sees their saved balance and active perks immediately.
-void hydratePerks();
+// Points/perks are no longer loaded from disk: the balance comes from the DB ledger
+// (hydrated by the collection store on sign-in via auth.tsx), and the per-offer
+// active/claim banner state is session-only. No pre-UI hydration call is needed.
 
 // The navigator lives in its own component rendered INSIDE <AuthProvider> so it can read
 // `useAuth()` and gate routes. Expo Router includes every route by default; the

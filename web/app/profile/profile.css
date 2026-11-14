@@ -39,7 +39,8 @@
   margin-bottom: 1.5rem;
 }
 
-.profile-logo { font-weight: 800; font-size: 1.2rem; color: var(--blue); text-decoration: none; }
+.profile-logo { display: inline-flex; align-items: center; gap: 0.55rem; font-weight: 800; font-size: 1.2rem; color: var(--orange); text-decoration: none; }
+.profile-logo img { border-radius: 8px; }
 
 .profile-logout {
   font: inherit;

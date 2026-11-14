@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { signIn } from "../auth/actions";
 import { EmailForm, GoogleButton } from "../auth/components";
 import { createClient } from "@/lib/supabase/server";
+import { BrandLink } from "../brand";
 import "../auth/auth.css";
 
 // This page reads the session cookie and searchParams at request time, so it
@@ -36,9 +37,9 @@ export default async function LoginPage({
   return (
     <div className="auth">
       <div className="auth-card">
-        <Link className="auth-logo" href="/">UniPrep</Link>
+        <BrandLink className="auth-logo" />
         <h1>Welcome back</h1>
-        <p className="sub">Sign in to continue.</p>
+        <p className="sub">Sign in to get back to your flower garden.</p>
 
         {notice && <p className="auth-notice">{notice}</p>}
         {errorText && <p className="auth-error" role="alert">{errorText}</p>}

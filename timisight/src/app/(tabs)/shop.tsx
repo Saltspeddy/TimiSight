@@ -1,28 +1,45 @@
+import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { BORDER, Brand, hardShadow } from '@/constants/brand';
-import { OFFERS, type Offer } from '@/constants/site-data';
+import { type Offer } from '@/constants/site-data';
 import { useLang } from '@/hooks/use-lang';
+import { useOffers } from '@/hooks/use-offers';
 import {
   canRedeem,
   claimRepeatable,
   deactivate,
   redeemActive,
   usePerks,
+  usePointsBalance,
+  type RedeemResult,
 } from '@/hooks/use-perks';
+
+// Map a RedeemResult error code to the shop's existing i18n copy.
+function redeemErrorText(code: string, t: ReturnType<typeof useLang>[1]): string {
+  switch (code) {
+    case 'notEnough':
+      return t.shopNotEnough;
+    case 'soldOut':
+      return t.shopSoldOut;
+    default:
+      return t.shopNotEnough; // generic fallback; the shop has no dedicated "failed" copy
+  }
+}
 
 export default function ShopScreen() {
   const [lang, t] = useLang();
   const insets = useSafeAreaInsets();
 
-  // Persistent store: balance, active passes and repeatable-claim counts all survive
-  // the app closing and reopening (see use-perks.ts — the single backend seam).
+  // Unified balance (same ledger as points earned by scanning) + client-side perks state.
   const perks = usePerks();
+  const balance = usePointsBalance();
+  const offers = useOffers();
 
   // Perks to surface in the "Active perks" banner: active passes the user currently
   // holds, plus repeatable offers (e.g. coffee) they have claimed at least once.
-  const activeOffers = OFFERS.filter((o) =>
+  const activeOffers = offers.filter((o) =>
     o.kind === 'active'
       ? perks.active.includes(o.id)
       : (perks.claims[o.id] ?? 0) > 0
@@ -40,7 +57,7 @@ export default function ShopScreen() {
         <View style={styles.banner}>
           <Text style={styles.bannerLabel}>{t.shopBalance}</Text>
           <Text style={styles.bannerValue}>
-            {perks.balance} {t.points}
+            {balance} {t.points}
           </Text>
         </View>
 
@@ -90,8 +107,8 @@ export default function ShopScreen() {
         {/* Catalogue */}
         <Text style={styles.sectionTitle}>{t.shopTitle}</Text>
         <View style={styles.list}>
-          {OFFERS.map((o) => (
-            <OfferCard key={o.id} offer={o} lang={lang} t={t} perks={perks} />
+          {offers.map((o) => (
+            <OfferCard key={o.id} offer={o} lang={lang} t={t} perks={perks} balance={balance} />
           ))}
         </View>
       </ScrollView>
@@ -104,17 +121,22 @@ function OfferCard({
   lang,
   t,
   perks,
+  balance,
 }: {
   offer: Offer;
   lang: ReturnType<typeof useLang>[0];
   t: ReturnType<typeof useLang>[1];
   perks: ReturnType<typeof usePerks>;
+  balance: number;
 }) {
+  const [pending, setPending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
   const soldOut = offer.stock !== null && offer.stock <= 0;
   const isActive = offer.kind === 'active' && perks.active.includes(offer.id);
-  const tooPoor = perks.balance < offer.cost;
+  const tooPoor = balance < offer.cost;
   const claimCount = perks.claims[offer.id] ?? 0;
-  const canAct = canRedeem(offer, perks);
+  const canAct = canRedeem(offer, balance, perks) && !pending;
 
   const meta =
     offer.stock === null ? t.shopUnlimited : `${Math.max(offer.stock, 0)} ${t.shopLeft}`;
@@ -128,9 +150,18 @@ function OfferCard({
         ? t.shopClaim
         : t.shopActivate;
 
-  const onPress = () => {
-    if (offer.kind === 'repeatable') claimRepeatable(offer.id);
-    else redeemActive(offer.id);
+  const onPress = async () => {
+    setError(null);
+    setPending(true);
+    try {
+      const res: RedeemResult =
+        offer.kind === 'repeatable'
+          ? await claimRepeatable(offer)
+          : await redeemActive(offer);
+      if (!res.ok) setError(redeemErrorText(res.error, t));
+    } finally {
+      setPending(false);
+    }
   };
 
   return (
@@ -146,7 +177,9 @@ function OfferCard({
             {claimCount}× {t.shopClaimed}
           </Text>
         ) : null}
-        {tooPoor && !soldOut && !isActive ? (
+        {error ? (
+          <Text style={styles.warn}>{error}</Text>
+        ) : tooPoor && !soldOut && !isActive ? (
           <Text style={styles.warn}>{t.shopNotEnough}</Text>
         ) : null}
       </View>

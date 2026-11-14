@@ -1,65 +1,141 @@
 export const APP_URL = 'https://apps.apple.com/'
-// All copy is placeholder: edit freely. Facts on place pages should be verified before demo day.
+
+export type Lang = 'en' | 'ro'
+type L = Record<Lang, string>
+
+// All copy is placeholder: edit freely. Facts on flower pages should be verified before demo day.
 export const T = {
   en: {
-    appName: 'TimeHunt',
+    appName: 'TimiSight',
     store: 'Download the app', getApp: 'Get the app',
-    moreTitle: 'Want to experience more of Timișoara?',
-    moreText: 'Download the app to check in at places, climb the leaderboard and see the city’s past in AR.',
-    dlTitle: 'Ready to hunt through time?', dlText: 'Download the app and start your first check-in.', nav: ['How it works', 'Preview', 'Places', 'Team'],
-    heroTitle: 'Walk Timișoara. See it as it was.',
-    heroText: 'Visit real places in the city, check in to climb the leaderboard, and point your camera to see the past appear in AR.',
-    cta: 'See the places', cta2: 'Meet the team',
-    howTitle: 'Three steps through time',
-    how: [['Explore', 'Find landmarks and social events on the city map.'], ['Check in', 'Visit a place, scan it, and your name moves up the leaderboard.'], ['See the past', 'Open the camera and watch older versions of the place appear in AR.']],
+    nav: ['How it works', 'Preview', 'Flowers', 'Team'],
+    heroTitle: 'Discover Timișoara, one flower at a time.',
+    heroText: 'Small flower statues are hidden around the city. Tap one with your phone, add it to your garden, learn the story of the place and earn points for real rewards.',
+    cta: 'Meet the flowers', cta2: 'Meet the team',
+    stampTop: 'City of flowers', stampBottom: 'flowers to find',
+    howTitle: 'How it works',
+    how: [
+      ['Find a flower', 'Look for a small 3D-printed flower statue next to a place with a story.'],
+      ['Tap it', 'Hold your phone to the flower. Its NFC tag adds it to your garden.'],
+      ['Learn the story', 'A short animated story tells you about the place the flower stands for.'],
+      ['Earn rewards', 'Each new flower pays points. Spend them on rewards from partner businesses.'],
+    ] as [string, string][],
     prevTitle: 'A look inside the app', prevText: 'The app is in development. These screens show what we are building.',
-    s1: 'City map', s2: 'Leaderboard', s3: 'AR view', arLabel: 'Scanning…', events: 'Events nearby',
-    evs: ['Evening walk: Revolution trail', 'Student quiz at the Opera', 'Photo hunt in Piața Unirii'],
-    placesTitle: 'Five places, five QR codes', placesText: 'Scan a code on site to open that place’s page. Two are live in this demo.',
-    open: 'Open demo page', soon: 'Coming soon', teamTitle: 'The team', teamText: 'Built at UniHack, Museum track.',
-    roles: ['Frontend', 'Backend', 'Backend', 'AR modelling'], footer: 'Made in Timișoara for UniHack.',
-    back: 'Go to the main page', video: 'Video of the place', history: 'Then and now', drag: 'Drag to compare',
-    then: 'Then', now: 'Now', checkin: 'Check in here', checked: 'Checked in. +100 points (demo).', videoNote: 'Add public/media/…mp4 to play the video.',
+    s1: 'Flower page', s2: 'Your garden', s3: 'Leaderboard',
+    checked: 'Checked in', total: 'Total', findIt: 'Find it in the city',
+    flowersTitle: 'Three flowers, three spots',
+    flowersText: 'Each flower stands for a place in Timișoara. Read its story here, or go find it and tap it.',
+    open: 'Open flower page', photoSoon: 'Photo coming soon',
+    dlTitle: 'Ready to start your garden?', dlText: 'Download the app and tap your first flower.',
+    teamTitle: 'The team', teamText: 'Built at UniHack, Museum track.',
+    footer: 'Made in Timișoara for UniHack.',
+    back: 'Go to the main page',
+    theFlower: 'The flower', thePlace: 'The place', pts: 'pts',
+    scanHint: 'Tap this flower’s NFC tag with the app to add it to your garden and earn points.',
+    ranking: 'See the leaderboard', moreFlowers: 'More flowers',
+    moreTitle: 'Ready to pick this flower?',
+    moreText: 'Download the app, find the statue and tap it to add it to your garden.',
     signIn: 'Sign in', profile: 'Profile',
   },
   ro: {
-    appName: 'TimeHunt',
+    appName: 'TimiSight',
     store: 'Descarcă aplicația', getApp: 'Descarcă',
-    moreTitle: 'Vrei să descoperi mai mult din Timișoara?',
-    moreText: 'Descarcă aplicația ca să faci check-in la locuri, să urci în clasament și să vezi trecutul orașului în AR.',
-    dlTitle: 'Gata să vânezi prin timp?', dlText: 'Descarcă aplicația și fă primul tău check-in.',nav: ['Cum funcționează', 'Previzualizare', 'Locuri', 'Echipa'],
-    heroTitle: 'Plimbă-te prin Timișoara. Vezi-o așa cum a fost.',
-    heroText: 'Vizitează locuri reale din oraș, fă check-in ca să urci în clasament și îndreaptă camera spre trecut, în realitate augmentată.',
-    cta: 'Vezi locurile', cta2: 'Cunoaște echipa',
-    howTitle: 'Trei pași prin timp',
-    how: [['Explorează', 'Găsește repere și evenimente sociale pe harta orașului.'], ['Fă check-in', 'Vizitează un loc, scanează-l și urci în clasament.'], ['Vezi trecutul', 'Deschide camera și privește cum apar versiuni mai vechi ale locului în AR.']],
+    nav: ['Cum funcționează', 'Previzualizare', 'Flori', 'Echipa'],
+    heroTitle: 'Descoperă Timișoara, o floare la un loc.',
+    heroText: 'Mici statui de flori sunt ascunse prin oraș. Atinge una cu telefonul, adaugă-o în grădina ta, află povestea locului și câștigă puncte pentru recompense reale.',
+    cta: 'Cunoaște florile', cta2: 'Cunoaște echipa',
+    stampTop: 'Orașul florilor', stampBottom: 'flori de găsit',
+    howTitle: 'Cum funcționează',
+    how: [
+      ['Găsește o floare', 'Caută o mică statuie de floare printată 3D, lângă un loc cu poveste.'],
+      ['Atinge-o', 'Apropie telefonul de floare. Eticheta NFC o adaugă în grădina ta.'],
+      ['Află povestea', 'O poveste animată scurtă îți spune despre locul pe care îl reprezintă floarea.'],
+      ['Câștigă recompense', 'Fiecare floare nouă aduce puncte. Cheltuiește-le la afaceri partenere.'],
+    ] as [string, string][],
     prevTitle: 'O privire în aplicație', prevText: 'Aplicația este în lucru. Ecranele de mai jos arată ce construim.',
-    s1: 'Harta orașului', s2: 'Clasament', s3: 'Vizualizare AR', arLabel: 'Se scanează…', events: 'Evenimente în apropiere',
-    evs: ['Plimbare de seară: traseul Revoluției', 'Quiz studențesc la Operă', 'Vânătoare de fotografii în Piața Unirii'],
-    placesTitle: 'Cinci locuri, cinci coduri QR', placesText: 'Scanează un cod la fața locului ca să deschizi pagina acelui loc. Două sunt active în demo.',
-    open: 'Deschide pagina demo', soon: 'În curând', teamTitle: 'Echipa', teamText: 'Creat la UniHack, secțiunea Muzeu.',
-    roles: ['Frontend', 'Backend', 'Design', 'AR'], footer: 'Făcut în Timișoara pentru UniHack.',
-    back: 'Mergi la pagina principală', video: 'Video cu locul', history: 'Atunci și acum', drag: 'Trage pentru a compara',
-    then: 'Atunci', now: 'Acum', checkin: 'Fă check-in aici', checked: 'Check-in făcut. +100 puncte (demo).', videoNote: 'Adaugă public/media/…mp4 pentru a reda videoul.',
+    s1: 'Pagina florii', s2: 'Grădina ta', s3: 'Clasament',
+    checked: 'Check-in făcut', total: 'Total', findIt: 'Găsește-o în oraș',
+    flowersTitle: 'Trei flori, trei locuri',
+    flowersText: 'Fiecare floare reprezintă un loc din Timișoara. Citește povestea aici sau pornește în căutarea ei și atinge-o.',
+    open: 'Deschide pagina florii', photoSoon: 'Poza vine în curând',
+    dlTitle: 'Gata să-ți începi grădina?', dlText: 'Descarcă aplicația și atinge prima ta floare.',
+    teamTitle: 'Echipa', teamText: 'Creat la UniHack, secțiunea Muzeu.',
+    footer: 'Făcut în Timișoara pentru UniHack.',
+    back: 'Mergi la pagina principală',
+    theFlower: 'Floarea', thePlace: 'Locul', pts: 'puncte',
+    scanHint: 'Atinge eticheta NFC a acestei flori cu aplicația ca s-o adaugi în grădina ta și să câștigi puncte.',
+    ranking: 'Vezi clasamentul', moreFlowers: 'Alte flori',
+    moreTitle: 'Gata să culegi această floare?',
+    moreText: 'Descarcă aplicația, găsește statuia și atinge-o ca s-o adaugi în grădina ta.',
     signIn: 'Autentificare', profile: 'Profil',
   },
 }
 
-export type Copy = { name: string; text?: string; era?: string }
-export type Place = { id: string; live: boolean; year?: number; video?: string; thenImg?: string; nowImg?: string; en: Copy; ro: Copy }
-export type Lang = 'en' | 'ro'
 export type Tr = (typeof T)['en']
 
-export const PLACES: Place[] = [
-  { id: 'opera', live: true, year: 1989, video: '/media/opera.mp4', thenImg: '/media/opera-then.jpg', nowImg: '/media/opera-now.jpg',
-    en: { name: 'Opera House, Victory Square', text: 'The steps of the Opera were a gathering point in December 1989, when Timișoara declared itself free of communism. Point your camera here in the app to see the square as it looked during those days.', era: 'December 1989' },
-    ro: { name: 'Opera, Piața Victoriei', text: 'Treptele Operei au fost loc de adunare în decembrie 1989, când Timișoara s-a declarat liberă de comunism. În aplicație, îndreaptă camera aici ca să vezi piața așa cum arăta în acele zile.', era: 'Decembrie 1989' } },
-  { id: 'unirii', live: true, year: 1900, video: '/media/unirii.mp4', thenImg: '/media/unirii-then.jpg', nowImg: '/media/unirii-now.jpg',
-    en: { name: 'Union Square', text: 'A baroque square from the Habsburg era, framed by the Roman Catholic Dome and the Serbian Orthodox Cathedral. Scan it in the app to see earlier versions of the square.', era: 'Early 1900s' },
-    ro: { name: 'Piața Unirii', text: 'O piață barocă din perioada habsburgică, înconjurată de Domul Romano-Catolic și de Catedrala Ortodoxă Sârbă. Scaneaz-o în aplicație ca să vezi versiuni mai vechi ale pieței.', era: 'Începutul secolului XX' } },
-  { id: 'p3', live: false, en: { name: 'Liberty Square' }, ro: { name: 'Piața Libertății' } },
-  { id: 'p4', live: false, en: { name: 'Metropolitan Cathedral' }, ro: { name: 'Catedrala Mitropolitană' } },
-  { id: 'p5', live: false, en: { name: 'Bastion' }, ro: { name: 'Bastionul' } },
+export type Flower = {
+  id: string
+  color: string // hex accent: the mat behind the flower, the dots, the card
+  points: number
+  image?: string // path under /public. Drop a PNG in public/flowers/ and set it here.
+  latinName?: string
+  name: L
+  spot: L // short place name for cards
+  about: L // the character / story behind the flower
+  place: L // the place the flower stands for
+}
+
+// The first two flowers match the `flowers` table seed (supabase/flowers.sql).
+// Keep ids identical to the app, because NFC tags point at /f/<id>.
+export const FLOWERS: Flower[] = [
+  {
+    id: 'violinist-rose',
+    color: '#ff6a2b',
+    points: 50,
+    image: '/flowers/violinist-rose.png',
+    latinName: 'Rosa',
+    name: { en: 'Violinist Rose', ro: 'Trandafirul violonist' },
+    spot: { en: 'Victory Square, by the Opera', ro: 'Piața Victoriei, lângă Operă' },
+    about: {
+      en: 'A rose that plays the violin, a tribute to music and to the city’s artists. The Opera House is a few steps away, and the rose keeps a small concert going for anyone who stops to look.',
+      ro: 'Un trandafir care cântă la vioară, un omagiu adus muzicii și artiștilor orașului. Opera e la câțiva pași, iar trandafirul ține un mic concert pentru oricine se oprește să-l privească.',
+    },
+    place: {
+      en: 'Victory Square, near the Opera: a small monument in the heart of the city. The square is the main meeting place of Timișoara and the place where the December 1989 revolution gathered.',
+      ro: 'Piața Victoriei, lângă Operă: un mic monument în inima orașului. Piața este principalul loc de întâlnire al Timișoarei și locul în care s-a adunat revoluția din decembrie 1989.',
+    },
+  },
+  {
+    id: 'hop-flower',
+    color: '#9fd56b',
+    points: 50,
+    latinName: 'Humulus lupulus',
+    name: { en: 'Hop Flower', ro: 'Floarea de hamei' },
+    spot: { en: 'Curtea Berarilor', ro: 'Curtea Berarilor' },
+    about: {
+      en: 'A hop flower for the people who brewed and drank in Timișoara. Hops give beer its bitterness and its smell, and the city’s brewers have counted on them for generations.',
+      ro: 'O floare de hamei pentru cei care au făcut și au băut bere în Timișoara. Hameiul dă berii amăreala și mirosul, iar berarii orașului s-au bazat pe el de generații.',
+    },
+    place: {
+      en: 'Curtea Berarilor, the Brewers’ Courtyard: a nod to the long brewing history of Timișoara, a city that has been making beer since the 18th century.',
+      ro: 'Curtea Berarilor: un semn către istoria îndelungată a berii în Timișoara, un oraș care face bere încă din secolul al XVIII-lea.',
+    },
+  },
+  {
+    id: 'tram-flower',
+    color: '#6cb4e4',
+    points: 50,
+    name: { en: 'Tram Flower', ro: 'Floarea din tramvai' },
+    spot: { en: 'Near the Miclosi museum', ro: 'Lângă muzeul Miclosi' },
+    about: {
+      en: 'One flower pushes another along on a tram, a small story about helping a friend along the way. Trams have run in Timișoara since 1869, the first horse-drawn line in the country, and they are still how many locals get around.',
+      ro: 'O floare împinge o altă floare într-un tramvai, o mică poveste despre ajutorul dat unui prieten pe drum. Tramvaiele circulă în Timișoara din 1869, prima linie trasă de cai din țară, și sunt și azi felul în care se mișcă mulți localnici.',
+    },
+    place: {
+      en: 'Placed near the Miclosi museum, where the city’s history is kept indoors and the tram flowers keep it moving outside.',
+      ro: 'Amplasată lângă muzeul Miclosi, unde istoria orașului stă la adăpost înăuntru, iar florile din tramvai o țin în mișcare afară.',
+    },
+  },
 ]
 
 export const TEAM = [ // replace with real names

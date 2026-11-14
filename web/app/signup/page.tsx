@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { signUp } from "../auth/actions";
 import { EmailForm, GoogleButton } from "../auth/components";
 import { createClient } from "@/lib/supabase/server";
+import { BrandLink } from "../brand";
 import "../auth/auth.css";
 
 // This page reads the session cookie at request time to redirect signed-in
@@ -20,9 +21,9 @@ export default async function SignUpPage() {
   return (
     <div className="auth">
       <div className="auth-card">
-        <Link className="auth-logo" href="/">UniPrep</Link>
+        <BrandLink className="auth-logo" />
         <h1>Create your account</h1>
-        <p className="sub">Join UniPrep in a few seconds.</p>
+        <p className="sub">Join TimiSight and start your flower garden.</p>
 
         <GoogleButton />
 

@@ -33,10 +33,12 @@
 }
 
 .auth-logo {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
   font-weight: 800;
   font-size: 1.3rem;
-  color: var(--blue);
+  color: var(--orange);
   text-decoration: none;
   margin-bottom: 1.2rem;
 }
@@ -142,3 +144,4 @@
 @media (prefers-reduced-motion: reduce) {
   .auth * { transition: none !important; }
 }
+.auth-logo img { border-radius: 8px; }
