@@ -33,7 +33,7 @@ export default function TabsLayout() {
 
       <NativeTabs.Trigger name="quests">
         <Label>{t.tabs.quests}</Label>
-        <Icon src={<VectorIcon family={MaterialIcons} name="explore" />} />
+        <Icon src={<VectorIcon family={MaterialIcons} name="map" />} />
       </NativeTabs.Trigger>
 
       <NativeTabs.Trigger name="account">
