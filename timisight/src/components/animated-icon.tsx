@@ -1,6 +1,6 @@
 import { Image } from 'expo-image';
 import * as SplashScreen from 'expo-splash-screen';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Dimensions, StyleSheet, View } from 'react-native';
 import Animated, { Easing, Keyframe } from 'react-native-reanimated';
 import { scheduleOnRN } from 'react-native-worklets';
@@ -8,9 +8,27 @@ import { scheduleOnRN } from 'react-native-worklets';
 const INITIAL_SCALE_FACTOR = Dimensions.get('screen').height / 90;
 const DURATION = 600;
 
-export function AnimatedSplashOverlay() {
+// `ready` gates when the native splash is allowed to hide. While it is false (auth session
+// still rehydrating) the overlay paints the static pre-animation frame and does NOT call
+// `SplashScreen.hideAsync()`, so the app never flashes login/tabs underneath. Once `ready`
+// flips true the existing onLayout → hideAsync → dissolve sequence runs. Defaults to true
+// so the overlay keeps working if rendered without the prop.
+export function AnimatedSplashOverlay({ ready = true }: { ready?: boolean }) {
   const [animate, setAnimate] = useState(false);
   const [visible, setVisible] = useState(true);
+  const [laidOut, setLaidOut] = useState(false);
+
+  // Hide the native splash and start the dissolve only once the overlay has mounted AND
+  // auth has finished rehydrating (`ready`). Driving this from an effect (not just
+  // `onLayout`) matters because `onLayout` fires once; if `ready` is still false then and
+  // flips true later, the effect re-runs and hides the splash. `preventAutoHideAsync()`
+  // in the layout keeps the native splash up until this `hideAsync()` call fires.
+  useEffect(() => {
+    if (!laidOut || !ready || animate) return;
+    SplashScreen.hideAsync().finally(() => {
+      setAnimate(true);
+    });
+  }, [laidOut, ready, animate]);
 
   if (!visible) return null;
 
@@ -47,13 +65,7 @@ export function AnimatedSplashOverlay() {
       {image}
     </Animated.View>
   ) : (
-    <View
-      onLayout={() => {
-        SplashScreen.hideAsync().finally(() => {
-          setAnimate(true);
-        });
-      }}
-      style={styles.splashOverlay}>
+    <View onLayout={() => setLaidOut(true)} style={styles.splashOverlay}>
       {image}
     </View>
   );

@@ -6,7 +6,7 @@ export type Lang = 'en' | 'ro';
 export const T = {
   en: {
     appName: 'TimiSight',
-    tabs: { home: 'Home', places: 'Places', shop: 'Shop', board: 'Leaderboard' },
+    tabs: { home: 'Home', places: 'Places', shop: 'Shop', board: 'Leaderboard', account: 'Account' },
     heroTitle: 'Walk Timișoara. See it as it was.',
     heroText:
       'Visit real places in the city, check in to climb the leaderboard, and point your camera to see the past appear in AR.',
@@ -49,11 +49,24 @@ export const T = {
     shopDeactivate: 'Deactivate',
     shopClaim: 'Claim',
     shopClaimed: 'claimed',
+    accountTitle: 'Your account',
+    accountText: 'Track your points and climb the leaderboard.',
+    accountBalance: 'Points balance',
+    accountLifetime: 'Lifetime earned',
+    accountRank: 'Leaderboard rank',
+    accountLanguage: 'Language',
+    loginTitle: 'Welcome to TimiSight',
+    loginText: 'Log in to explore the city and climb the leaderboard.',
+    authLogin: 'Log in with Auth0',
+    authSigningIn: 'Signing in…',
+    authLogout: 'Log out',
+    authLoading: 'Loading…',
+    authSignedOutHint: 'Sign in to sync your account.',
     footer: 'Made in Timișoara for UniHack.',
   },
   ro: {
     appName: 'TimiSight',
-    tabs: { home: 'Acasă', places: 'Locuri', shop: 'Magazin', board: 'Clasament' },
+    tabs: { home: 'Acasă', places: 'Locuri', shop: 'Magazin', board: 'Clasament', account: 'Cont' },
     heroTitle: 'Plimbă-te prin Timișoara. Vezi-o așa cum a fost.',
     heroText:
       'Vizitează locuri reale din oraș, fă check-in ca să urci în clasament și îndreaptă camera spre trecut, în realitate augmentată.',
@@ -97,6 +110,19 @@ export const T = {
     shopDeactivate: 'Dezactivează',
     shopClaim: 'Revendică',
     shopClaimed: 'revendicate',
+    accountTitle: 'Contul tău',
+    accountText: 'Urmărește-ți punctele și urcă în clasament.',
+    accountBalance: 'Sold puncte',
+    accountLifetime: 'Total câștigat',
+    accountRank: 'Loc în clasament',
+    accountLanguage: 'Limbă',
+    loginTitle: 'Bun venit la TimiSight',
+    loginText: 'Conectează-te ca să explorezi orașul și să urci în clasament.',
+    authLogin: 'Conectare cu Auth0',
+    authSigningIn: 'Se conectează…',
+    authLogout: 'Deconectare',
+    authLoading: 'Se încarcă…',
+    authSignedOutHint: 'Conectează-te pentru a-ți sincroniza contul.',
     footer: 'Făcut în Timișoara pentru UniHack.',
   },
 } as const;
@@ -170,9 +196,17 @@ export const LEADERBOARD: { name: string; points: number }[] = [
   { name: 'Ioana T.', points: 940 },
 ];
 
+// The signed-in player (demo). A real build would read this from auth + the
+// points ledger. `points` matches the "You" row in LEADERBOARD above.
+export const ME = {
+  name: 'You',
+  points: 1020,
+  lifetime: 1020,
+};
+
 // The signed-in player's current points balance (demo). Matches the "You" row
 // above; a real build would read this from the points ledger.
-export const MY_POINTS = 1020;
+export const MY_POINTS = ME.points;
 
 // A perk is either:
 //   'repeatable' — claimable on demand any number of times (e.g. a free coffee);
