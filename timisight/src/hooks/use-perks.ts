@@ -1,11 +1,7 @@
 import { useSyncExternalStore } from 'react';
 
 import type { Offer } from '@/constants/site-data';
-import {
-  reloadCollection,
-  totalPoints,
-  useCollection,
-} from '@/constants/collection';
+import { reloadCollection, useCollection } from '@/constants/collection';
 import { refreshOffers } from '@/hooks/use-offers';
 import { supabase } from '@/lib/supabase';
 
@@ -130,7 +126,9 @@ export function usePerks(): PerksState {
 
 /** The unified spendable balance (same ledger as earned points). */
 export function usePointsBalance(): number {
-  // Subscribe to the collection store so the balance re-renders on change.
-  useCollection();
-  return totalPoints();
+  // Read the balance FROM the subscribed snapshot (not a side-channel totalPoints()
+  // call) so React ties the rendered value to the collection store and re-renders when
+  // it changes or finishes hydrating.
+  const collection = useCollection();
+  return collection.total;
 }

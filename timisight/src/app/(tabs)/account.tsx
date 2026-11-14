@@ -5,9 +5,10 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LangToggle } from '@/components/lang-toggle';
 import { BORDER, Brand, hardShadow } from '@/constants/brand';
 import { useCollection } from '@/constants/collection';
-import { LEADERBOARD, ME } from '@/constants/site-data';
+import { ME } from '@/constants/site-data';
 import { useAuth } from '@/hooks/auth';
 import { useLang } from '@/hooks/use-lang';
+import { useLeaderboard } from '@/hooks/use-leaderboard';
 
 export default function AccountScreen() {
   const [, t] = useLang();
@@ -16,10 +17,11 @@ export default function AccountScreen() {
   // Real balance from the unified ledger (same points earned by scanning flowers).
   const { total } = useCollection();
 
-  // Rank is still derived from the demo leaderboard (DB leaderboard wiring is a
-  // separate task); fall back the comparison name to the demo "You" row.
-  const ranked = [...LEADERBOARD].sort((a, b) => b.points - a.points);
-  const rank = ranked.findIndex((r) => r.name === ME.name) + 1;
+  // Real rank from the DB leaderboard: the signed-in user's position in the ranking.
+  // `useLeaderboard` is ordered by lifetime desc, so the index is the rank. 0 (not found)
+  // means the user has no points yet → shown as '—'.
+  const ranked = useLeaderboard();
+  const rank = user ? ranked.findIndex((r) => r.sub === user.sub) + 1 : 0;
 
   // The signed-in display name falls back to the demo "You" when the profile omits it.
   const displayName = user?.name ?? user?.email ?? ME.name;
