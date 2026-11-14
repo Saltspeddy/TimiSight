@@ -35,7 +35,19 @@ export const supabase = createClient(url ?? '', key ?? '', {
     detectSessionInUrl: false,
   },
   // Supabase invokes this before every request to get the bearer token. Returns a
-  // non-expired Auth0 access token (refreshing on demand), or null => anonymous
+  // non-expired Auth0 access token (refreshing on demand), or '' => anonymous
   // request (public reads still work; per-user RLS rejects as `anon`).
-  accessToken: async () => (await getFreshAccessToken()) ?? '',
+  //
+  // Guard: only hand Supabase a token that is a well-formed JWS (header.payload.sig,
+  // i.e. exactly 3 dot-separated parts). If Auth0 is misconfigured (e.g. the custom
+  // API audience is not authorized), it issues an OPAQUE or ENCRYPTED (JWE, 5-part)
+  // access token; passing that to Supabase yields "Expected 3 parts in JWT; got 5"
+  // and breaks even public reads. Treating a non-JWS token as "no token" keeps the
+  // catalogue (flowers/offers) working and surfaces the auth problem only on per-user
+  // calls, which is the correct degradation.
+  accessToken: async () => {
+    const token = await getFreshAccessToken();
+    if (!token) return '';
+    return token.split('.').length === 3 ? token : '';
+  },
 });
