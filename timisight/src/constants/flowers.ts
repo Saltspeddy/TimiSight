@@ -25,6 +25,14 @@ const REWARDS: Reward[] = [
 // Add an entry here when you add a new flower with artwork.
 export const FLOWER_IMAGES: Record<string, number> = {
   'violinist-rose': require('../../assets/images/violinist-rose.png'),
+  // TODO: replace with real artwork
+  'casa-muhle': require('../../assets/images/violinist-rose.png'),
+  // TODO: replace with real artwork
+  'opera-rose': require('../../assets/images/violinist-rose.png'),
+  // TODO: replace with real artwork
+  'miklosi-tulip': require('../../assets/images/violinist-rose.png'),
+  // TODO: replace with real artwork
+  'timisoreana-malt': require('../../assets/images/violinist-rose.png'),
 };
 
 // Shape of a row from the `flowers` table (see web/supabase/flowers.sql).
@@ -100,6 +108,86 @@ export const FLOWERS: Flower[] = [
       text: {
         en: 'Near the old brewery quarter — a nod to the city’s brewing history.',
         ro: 'Lângă vechiul cartier al fabricii de bere — un semn către istoria berii în oraș.',
+      },
+    },
+    rewards: REWARDS,
+  },
+  {
+    id: 'casa-muhle',
+    color: '#e86a8e',
+    points: 50,
+    image: FLOWER_IMAGES['casa-muhle'],
+    name: { en: 'Casa Mühle', ro: 'Casa Mühle' },
+    latinName: 'Rosa × hybrida',
+    about: {
+      en: 'A garden rose from the house that taught Timișoara to grow roses — where every flower path begins.',
+      ro: 'Un trandafir de grădină din casa care a învățat Timișoara să cultive trandafiri — de unde începe fiecare traseu floral.',
+    },
+    place: {
+      name: { en: '', ro: '' },
+      text: {
+        en: 'Casa Mühle — the historic Mühle house and flower shop, the starting point of the city’s flower routes.',
+        ro: 'Casa Mühle — casa și florăria istorică Mühle, punctul de pornire al traseelor florale ale orașului.',
+      },
+    },
+    rewards: REWARDS,
+  },
+  {
+    id: 'opera-rose',
+    color: '#c0392b',
+    points: 50,
+    image: FLOWER_IMAGES['opera-rose'],
+    name: { en: 'Opera Rose', ro: 'Trandafirul Operei' },
+    latinName: 'Rosa',
+    about: {
+      en: 'A rose for the Opera House, carrying the music of the stage into the city’s gardens.',
+      ro: 'Un trandafir pentru Operă, care poartă muzica scenei în grădinile orașului.',
+    },
+    place: {
+      name: { en: '', ro: '' },
+      text: {
+        en: 'The Opera House — Romanian National Opera Timișoara, in Victory Square.',
+        ro: 'Opera — Opera Națională Română Timișoara, în Piața Victoriei.',
+      },
+    },
+    rewards: REWARDS,
+  },
+  {
+    id: 'miklosi-tulip',
+    color: '#f1c40f',
+    points: 50,
+    image: FLOWER_IMAGES['miklosi-tulip'],
+    name: { en: 'Miklósi Tulip', ro: 'Laleaua Miklósi' },
+    latinName: 'Tulipa',
+    about: {
+      en: 'A tulip for Carol Miklósi, who set the city’s first trams rolling through the streets.',
+      ro: 'O lalea pentru Carol Miklósi, cel care a pus primele tramvaie ale orașului în mișcare pe străzi.',
+    },
+    place: {
+      name: { en: '', ro: '' },
+      text: {
+        en: 'Carol Miklósi Tram Museum — the city’s tram museum, honouring its public transport pioneer.',
+        ro: 'Muzeul Tramvaielor Carol Miklósi — muzeul tramvaielor orașului, în cinstea pionierului transportului public.',
+      },
+    },
+    rewards: REWARDS,
+  },
+  {
+    id: 'timisoreana-malt',
+    color: '#d4a017',
+    points: 50,
+    image: FLOWER_IMAGES['timisoreana-malt'],
+    name: { en: 'Timișoreana Malt', ro: 'Malțul Timișoreana' },
+    latinName: 'Hordeum vulgare',
+    about: {
+      en: 'A barley malt flower from the Timișoreana brewery, where the city’s oldest brewing tradition still ferments.',
+      ro: 'O floare de malț de orz de la fabrica Timișoreana, unde cea mai veche tradiție a berii din oraș încă fermentează.',
+    },
+    place: {
+      name: { en: '', ro: '' },
+      text: {
+        en: 'The Timișoreana brewery — the oldest brewery in Romania, rooted in Timișoara since 1718.',
+        ro: 'Fabrica Timișoreana — cea mai veche fabrică de bere din România, în Timișoara din 1718.',
       },
     },
     rewards: REWARDS,
