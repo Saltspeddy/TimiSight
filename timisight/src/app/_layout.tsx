@@ -23,6 +23,7 @@ export default function RootLayout() {
           <Stack screenOptions={{ headerShown: false }}>
             <Stack.Screen name="(tabs)" />
             <Stack.Screen name="place/[id]" options={{ presentation: 'card' }} />
+            <Stack.Screen name="redirect" />
           </Stack>
         </AuthProvider>
       </ThemeProvider>

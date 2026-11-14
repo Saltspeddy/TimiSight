@@ -53,8 +53,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const discovery = useAutoDiscovery(`https://${domain}`);
 
   // The redirect URI the user must whitelist in the Auth0 dashboard. Scheme comes from
-  // app.json (`timisight`); makeRedirectUri picks the platform-correct form.
-  const redirectUri = useMemo(() => makeRedirectUri({ scheme: 'timisight' }), []);
+  // app.json (`timisight`); the explicit `path` ensures a non-empty host/path segment so
+  // the URI is `timisight://redirect` rather than a bare `timisight://` — Auth0's
+  // callback-URL validator rejects a scheme with an empty authority.
+  const redirectUri = useMemo(
+    () => makeRedirectUri({ scheme: 'timisight', path: 'redirect' }),
+    [],
+  );
 
   const [request, response, promptAsync] = useAuthRequest(
     {
@@ -156,19 +161,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [request, promptAsync]);
 
   const signOut = useCallback(async () => {
-    await clearSession();
-    setUser(null);
-    // Also clear the Auth0 session cookie so the next sign-in isn't silently
-    // re-authenticated. Browser errors are non-fatal — local state is already cleared.
+    // Open the Auth0 end-session flow FIRST, and only clear the local session once it
+    // actually completed. The browser returns to `redirectUri` (timisight://redirect),
+    // which resolves to the `/redirect` route and bounces back to the account tab, so the
+    // "You have successfully logged out" page closes automatically with no Unmatched Route.
+    //
+    // If the user cancels/dismisses Auth0's logout confirmation, the result is not
+    // `success`, so local state is left intact and the app stays signed in — a cancelled
+    // logout must NOT log the user out locally. If discovery hasn't resolved yet, or the
+    // browser throws, leave the session untouched rather than clearing blindly.
+    if (!discovery?.endSessionEndpoint) return;
+    const logoutUrl =
+      `${discovery.endSessionEndpoint}?client_id=${encodeURIComponent(clientId)}` +
+      `&returnTo=${encodeURIComponent(redirectUri)}`;
     try {
-      if (discovery?.endSessionEndpoint) {
-        const logoutUrl =
-          `${discovery.endSessionEndpoint}?client_id=${encodeURIComponent(clientId)}` +
-          `&returnTo=${encodeURIComponent(redirectUri)}`;
-        await WebBrowser.openAuthSessionAsync(logoutUrl, redirectUri);
+      const result = await WebBrowser.openAuthSessionAsync(logoutUrl, redirectUri);
+      if (result.type === 'success') {
+        await clearSession();
+        setUser(null);
       }
     } catch {
-      // Ignore: the user is already signed out locally.
+      // Browser error: leave the local session intact so the user is not stranded in a
+      // half-logged-out state.
     }
   }, [discovery, clientId, redirectUri]);
 
