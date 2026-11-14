@@ -4,7 +4,12 @@ export type BadgeState = { id: string; emoji: string; title: Record<Lang, string
 
 // ✏️ EDIT HERE: names and goals. Badges are calculated from the player's collection and points.
 // `totalFlowers` is the size of the (DB-backed) catalogue, passed in by the caller.
-export function evaluateBadges(collected: string[], points: number, totalFlowers: number): BadgeState[] {
+export function evaluateBadges(
+  collected: string[],
+  points: number,
+  totalFlowers: number,
+  completedPathCount = 0,
+): BadgeState[] {
   const all = totalFlowers;
   const defs = [
     { id: 'first_bloom', emoji: '🌱', title: { en: 'First Bloom', ro: 'Prima floare' }, value: collected.length, goal: 1 },
@@ -12,6 +17,9 @@ export function evaluateBadges(collected: string[], points: number, totalFlowers
     { id: 'full_garden', emoji: '🌸', title: { en: 'Full Garden', ro: 'Grădină completă' }, value: collected.length, goal: all },
     { id: 'rose_whisperer', emoji: '🌹', title: { en: 'Rose Whisperer', ro: 'Prietenul trandafirilor' }, value: collected.includes('violinist-rose') ? 1 : 0, goal: 1 },
     { id: 'point_collector', emoji: '⭐', title: { en: 'Point Collector', ro: 'Colecționar de puncte' }, value: points, goal: 200 },
+    // Client-derived from flower-path completion state (badge id matches flower_paths.badge
+    // = 'first_path' seeded in web/supabase/quests.sql).
+    { id: 'first_path', emoji: '🗺️', title: { en: 'Pathfinder', ro: 'Cercetaș' }, value: completedPathCount, goal: 1 },
   ];
   return defs.map((d) => ({ ...d, value: Math.min(d.value, d.goal), earned: d.value >= d.goal }));
 }
