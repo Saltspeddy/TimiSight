@@ -6,7 +6,7 @@ export type Lang = 'en' | 'ro';
 export const T = {
   en: {
     appName: 'TimiSight',
-    tabs: { home: 'Home', places: 'Places', shop: 'Shop', board: 'Leaderboard', account: 'Account' },
+    tabs: { home: 'Home', places: 'Garden', shop: 'Shop', board: 'Leaderboard', account: 'Account' },
     heroTitle: 'Walk Timișoara. See it as it was.',
     heroText:
       'Visit real places in the city, check in to climb the leaderboard, and point your camera to see the past appear in AR.',
@@ -66,7 +66,7 @@ export const T = {
   },
   ro: {
     appName: 'TimiSight',
-    tabs: { home: 'Acasă', places: 'Locuri', shop: 'Magazin', board: 'Clasament', account: 'Cont' },
+    tabs: { home: 'Acasă', places: 'Grădina', shop: 'Magazin', board: 'Clasament', account: 'Cont' },
     heroTitle: 'Plimbă-te prin Timișoara. Vezi-o așa cum a fost.',
     heroText:
       'Vizitează locuri reale din oraș, fă check-in ca să urci în clasament și îndreaptă camera spre trecut, în realitate augmentată.',

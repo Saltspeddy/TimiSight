@@ -1,80 +1,87 @@
-import { router } from 'expo-router';
+import { Image } from 'expo-image';
+import { router, useFocusEffect } from 'expo-router';
+import { useCallback, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { PLACES } from '@/constants/site-data';
+import { evaluateBadges } from '@/constants/badges';
 import { BORDER, Brand, hardShadow } from '@/constants/brand';
+import { collectedIds, totalPoints } from '@/constants/collection';
+import { useFlowers } from '@/hooks/use-flowers';
 import { useLang } from '@/hooks/use-lang';
 
-export default function PlacesScreen() {
-  const [lang, t] = useLang();
+const TXT = {
+  en: { title: 'Garden', flowers: 'flowers', find: 'Find it in the city', badges: 'Badges' },
+  ro: { title: 'Grădina', flowers: 'flori', find: 'Găsește-o în oraș', badges: 'Insigne' },
+};
+
+export default function GardenScreen() {
+  const [lang] = useLang();
+  const x = TXT[lang];
   const insets = useSafeAreaInsets();
+  const [, refresh] = useState(0);
+  useFocusEffect(useCallback(() => { refresh((n) => n + 1); }, [])); // re-read when the tab is shown
+  const flowers = useFlowers();
+  const owned = collectedIds();
+  const badges = evaluateBadges(owned, totalPoints(), flowers.length);
 
   return (
-    <View style={styles.root}>
-      <ScrollView
-        contentContainerStyle={{ padding: 20, paddingTop: insets.top + 20, paddingBottom: 100 }}
-        showsVerticalScrollIndicator={false}>
-        <Text style={styles.h2}>{t.placesTitle}</Text>
-        <Text style={styles.sub}>{t.placesText}</Text>
+    <ScrollView style={{ backgroundColor: Brand.paper }}
+      contentContainerStyle={{ padding: 20, paddingTop: insets.top + 24, paddingBottom: 120, gap: 16 }}>
+      <Text style={s.h1}>{x.title}</Text>
+      <Text style={s.count}>{owned.length} / {flowers.length} {x.flowers}</Text>
 
-        <View style={styles.list}>
-          {PLACES.map((p) => {
-            const c = p[lang];
-            return (
-              <View key={p.id} style={[styles.ticket, p.live ? styles.live : styles.dashed]}>
-                <View style={styles.ticketBody}>
-                  <Text style={styles.name}>{c.name}</Text>
-                  {c.era ? <Text style={styles.era}>{c.era}</Text> : null}
-                </View>
-                {p.live ? (
-                  <Pressable
-                    onPress={() => router.navigate(`/place/${p.id}`)}
-                    style={({ pressed }) => [styles.btn, pressed && styles.btnPressed]}>
-                    <Text style={styles.btnText}>{t.open}</Text>
-                  </Pressable>
-                ) : (
-                  <Text style={styles.soon}>{t.soon}</Text>
-                )}
+      <View style={s.grid}>
+        {flowers.map((f) =>
+          owned.includes(f.id) ? (
+            <Pressable key={f.id} onPress={() => router.push(`/place/${f.id}`)} accessibilityRole="button"
+              accessibilityLabel={f.name[lang]} style={({ pressed }) => [s.card, pressed && s.pressed]}>
+              <View style={[s.thumb, { backgroundColor: f.color }]}>
+                {f.image ? <Image source={f.image} style={StyleSheet.absoluteFill} contentFit="contain" /> : null}
               </View>
-            );
-          })}
-        </View>
-      </ScrollView>
-    </View>
+              <Text style={s.name} numberOfLines={2}>{f.name[lang]}</Text>
+            </Pressable>
+          ) : (
+            <View key={f.id} style={[s.card, s.locked]}>
+              <Text style={s.q}>?</Text>
+              <Text style={s.lockText}>{x.find}</Text>
+            </View>
+          ),
+        )}
+      </View>
+
+      <Text style={s.h2}>{x.badges}</Text>
+      <View style={s.grid}>
+        {badges.map((b) => (
+          <View key={b.id} style={[s.badge, b.earned ? s.badgeOn : s.badgeOff]}>
+            <Text style={s.badgeEmoji}>{b.emoji}</Text>
+            <Text style={s.badgeTitle} numberOfLines={2}>{b.title[lang]}</Text>
+            <Text style={s.badgeProg}>{b.earned ? '✓' : `${b.value}/${b.goal}`}</Text>
+          </View>
+        ))}
+      </View>
+    </ScrollView>
   );
 }
 
-const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: Brand.paper },
-  h2: { fontSize: 28, fontWeight: '800', color: Brand.ink, letterSpacing: -0.5, marginBottom: 6 },
-  sub: { fontSize: 16, color: Brand.inkFaint, marginBottom: 20, fontStyle: 'italic' },
-  list: { gap: 16 },
-  ticket: {
-    borderWidth: BORDER,
-    borderColor: Brand.ink,
-    borderRadius: 6,
-    padding: 18,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 14,
-    minHeight: 90,
-  },
-  dashed: { borderStyle: 'dashed', backgroundColor: '#fff' },
-  live: { borderStyle: 'solid', backgroundColor: Brand.yellow },
-  ticketBody: { flex: 1, gap: 4 },
-  name: { fontSize: 17, fontWeight: '800', color: Brand.ink },
-  era: { fontSize: 14, color: Brand.inkSoft, fontStyle: 'italic' },
-  soon: { fontStyle: 'italic', color: Brand.inkFaint, fontSize: 15 },
-  btn: {
-    backgroundColor: Brand.blue,
-    borderWidth: BORDER,
-    borderColor: Brand.ink,
-    borderRadius: 10,
-    paddingVertical: 8,
-    paddingHorizontal: 14,
-    ...hardShadow(3),
-  },
-  btnPressed: { transform: [{ translateX: 2 }, { translateY: 2 }], ...hardShadow(1) },
-  btnText: { color: '#fff', fontWeight: '800', fontSize: 14 },
+const s = StyleSheet.create({
+  h1: { fontSize: 32, fontWeight: '800', color: Brand.ink, letterSpacing: -0.5, paddingRight: 60 },
+  count: { fontSize: 16, fontStyle: 'italic', color: Brand.inkSoft },
+  h2: { fontSize: 22, fontWeight: '800', color: Brand.ink, marginTop: 12 },
+  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
+  // Fixed ~half-width so cards tile two-per-row. No flexGrow: a lone card on the
+  // last row keeps its size instead of stretching to fill the whole row.
+  card: { width: '47%', backgroundColor: Brand.white, borderWidth: BORDER, borderColor: Brand.ink, borderRadius: 16, padding: 10, gap: 8, ...hardShadow(4) },
+  pressed: { transform: [{ translateX: 2 }, { translateY: 2 }], ...hardShadow(2) },
+  thumb: { aspectRatio: 1, borderRadius: 12, borderWidth: 2, borderColor: Brand.ink, overflow: 'hidden' },
+  name: { fontSize: 16, fontWeight: '800', color: Brand.ink },
+  locked: { borderStyle: 'dashed', alignItems: 'center', justifyContent: 'center', minHeight: 170, shadowOpacity: 0, elevation: 0, backgroundColor: 'transparent' },
+  q: { fontSize: 44, fontWeight: '800', color: Brand.inkFaint },
+  lockText: { fontSize: 14, fontStyle: 'italic', color: Brand.inkFaint, textAlign: 'center' },
+  badge: { width: '31%', alignItems: 'center', gap: 4, borderWidth: 2, borderColor: Brand.ink, borderRadius: 14, padding: 10 },
+  badgeOn: { backgroundColor: Brand.yellow },
+  badgeOff: { backgroundColor: Brand.white, opacity: 0.6 },
+  badgeEmoji: { fontSize: 30 },
+  badgeTitle: { fontSize: 12, fontWeight: '800', color: Brand.ink, textAlign: 'center' },
+  badgeProg: { fontSize: 12, color: Brand.inkSoft },
 });
