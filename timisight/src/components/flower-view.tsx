@@ -7,8 +7,9 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { FlowerStory } from '@/components/flower-story';
 
 import { BORDER, Brand, hardShadow } from '@/constants/brand';
-import { checkIn, collectedIds, type CheckInResult } from '@/constants/collection';
+import { checkIn, useCollection, type CheckInResult } from '@/constants/collection';
 import type { Lang } from '@/constants/site-data';
+import { useAuth } from '@/hooks/auth';
 import { useFlowers } from '@/hooks/use-flowers';
 import { useLang } from '@/hooks/use-lang';
 
@@ -36,24 +37,42 @@ export function FlowerView({ id, scanned = false }: { id: string; scanned?: bool
   const [lang, t] = useLang();
   const x = TXT[lang];
   const insets = useSafeAreaInsets();
+  const { isAuthenticated } = useAuth();
   const flowers = useFlowers();
+  const collection = useCollection();
   const flower = flowers.find((f) => f.id === id);
   const [result, setResult] = useState<CheckInResult | null>(null);
   const [story, setStory] = useState(false);
   const ran = useRef(false);
 
   // The check-in happens once, automatically, when the screen is opened from a tag.
+  // It is async now (writes to the DB), so the result is applied inside the async body.
+  // The `ran` guard ensures the RPC fires exactly once even across re-renders.
   useEffect(() => {
     if (!scanned || !flower || ran.current) return;
+    // A signed-out scan cannot write (RLS would reject it); skip the RPC and leave the
+    // screen as a normal flower view. The `ran` guard still prevents a retry loop.
+    if (!isAuthenticated) return;
     ran.current = true;
-    // One-time check-in when the screen is opened from a scanned tag. The
-    // `ran` guard ensures this runs exactly once, so setting state here does
-    // not cause a render loop.
-    const res = checkIn(flower);
-    setResult(res);
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    if (!res.already) setStory(true);
-  }, [scanned, flower]);
+
+    let active = true;
+    (async () => {
+      try {
+        const res = await checkIn(flower.id);
+        if (!active) return;
+        setResult(res);
+        if (!res.already) setStory(true);
+      } catch (e) {
+        // Server rejected the check-in (e.g. transient error / unknown flower).
+        // Leave the UI unchanged; the `ran` guard prevents an automatic retry.
+        console.warn('[flower-view] check-in failed:', e);
+      }
+    })();
+
+    return () => {
+      active = false;
+    };
+  }, [scanned, flower, isAuthenticated]);
 
   const goBack = () => (router.canGoBack() ? router.back() : router.replace('/'));
 
@@ -67,7 +86,7 @@ export function FlowerView({ id, scanned = false }: { id: string; scanned?: bool
   }
 
   const other: Lang = lang === 'en' ? 'ro' : 'en';
-  const owned = collectedIds()
+  const owned = collection.collectedIds
     .map((fid) => flowers.find((f) => f.id === fid))
     .filter((f) => !!f);
 

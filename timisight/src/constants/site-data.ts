@@ -204,9 +204,10 @@ export const ME = {
   lifetime: 1020,
 };
 
-// The signed-in player's current points balance (demo). Matches the "You" row
-// above; a real build would read this from the points ledger.
-export const MY_POINTS = ME.points;
+// NOTE: the player's spendable balance is NO LONGER sourced here. It comes from the
+// unified points ledger in Supabase (see src/constants/collection.ts — totalPoints()),
+// so earned and spendable points are the same number. `ME`/`LEADERBOARD` above remain
+// demo data only for the leaderboard-rank placeholder on the account screen.
 
 // A perk is either:
 //   'repeatable' — claimable on demand any number of times (e.g. a free coffee);

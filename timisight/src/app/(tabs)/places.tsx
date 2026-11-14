@@ -1,12 +1,11 @@
 import { Image } from 'expo-image';
-import { router, useFocusEffect } from 'expo-router';
-import { useCallback, useState } from 'react';
+import { router } from 'expo-router';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { evaluateBadges } from '@/constants/badges';
 import { BORDER, Brand, hardShadow } from '@/constants/brand';
-import { collectedIds, totalPoints } from '@/constants/collection';
+import { useCollection } from '@/constants/collection';
 import { useFlowers } from '@/hooks/use-flowers';
 import { useLang } from '@/hooks/use-lang';
 
@@ -19,11 +18,12 @@ export default function GardenScreen() {
   const [lang] = useLang();
   const x = TXT[lang];
   const insets = useSafeAreaInsets();
-  const [, refresh] = useState(0);
-  useFocusEffect(useCallback(() => { refresh((n) => n + 1); }, [])); // re-read when the tab is shown
+  // Reactive collection store: re-renders automatically when a scan updates it, so the
+  // old useFocusEffect re-read hack is no longer needed.
+  const collection = useCollection();
   const flowers = useFlowers();
-  const owned = collectedIds();
-  const badges = evaluateBadges(owned, totalPoints(), flowers.length);
+  const owned = collection.collectedIds;
+  const badges = evaluateBadges(owned, collection.total, flowers.length);
 
   return (
     <ScrollView style={{ backgroundColor: Brand.paper }}

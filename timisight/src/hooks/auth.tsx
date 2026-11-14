@@ -1,6 +1,5 @@
 import {
   exchangeCodeAsync,
-  fetchUserInfoAsync,
   makeRedirectUri,
   useAuthRequest,
   useAutoDiscovery,
@@ -9,13 +8,44 @@ import Constants from 'expo-constants';
 import * as WebBrowser from 'expo-web-browser';
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 
+import { resetCollectionForUserChange } from '@/constants/collection';
 import {
   clearSession,
   loadSession,
   saveSession,
+  SUPABASE_AUTH0_AUDIENCE,
   type AuthUser,
   type StoredSession,
 } from '@/lib/auth-storage';
+
+/**
+ * Decode the payload of a JWT (no signature verification). Used to read the OIDC
+ * profile claims (`sub`, `name`, `email`, `picture`) out of the Auth0 id token, so we
+ * do not depend on the /userinfo endpoint — once we request an access token for a
+ * custom API audience, that endpoint's behavior is tenant-dependent. The id token
+ * came straight from the Auth0 token endpoint over TLS, and Supabase re-verifies the
+ * *access* token server-side, so a client-side decode is safe here. Returns null on
+ * any malformed input.
+ */
+function decodeJwtPayload(jwt: string | undefined): Record<string, unknown> | null {
+  if (!jwt) return null;
+  const parts = jwt.split('.');
+  if (parts.length < 2) return null;
+  try {
+    // base64url -> base64, then decode. atob is available in the RN/Hermes runtime.
+    const b64 = parts[1].replace(/-/g, '+').replace(/_/g, '/');
+    const padded = b64 + '='.repeat((4 - (b64.length % 4)) % 4);
+    const json = decodeURIComponent(
+      atob(padded)
+        .split('')
+        .map((c) => '%' + c.charCodeAt(0).toString(16).padStart(2, '0'))
+        .join(''),
+    );
+    return JSON.parse(json) as Record<string, unknown>;
+  } catch {
+    return null;
+  }
+}
 
 // Auth0 OIDC sign-in via Authorization Code + PKCE. No client secret, no server — the
 // code is exchanged in-app with the PKCE verifier (Auth0 "Native" application type).
@@ -65,8 +95,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     {
       clientId,
       redirectUri,
-      scopes: ['openid', 'profile', 'email'],
+      // `offline_access` yields a refresh token so we can keep the Supabase access
+      // token fresh (see auth-storage.ts#getFreshAccessToken).
+      scopes: ['openid', 'profile', 'email', 'offline_access'],
       usePKCE: true,
+      // `audience` makes Auth0 issue a signed RS256 access token for the Supabase
+      // API (instead of an opaque /userinfo token), which Supabase Third-Party Auth
+      // can validate. Must match the Auth0 API Identifier and the Supabase provider.
+      extraParams: { audience: SUPABASE_AUTH0_AUDIENCE },
     },
     discovery,
   );
@@ -87,7 +123,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     let active = true;
     (async () => {
       const stored = await loadSession();
-      if (active && stored) setUser(stored.user);
+      if (active && stored) {
+        setUser(stored.user);
+        // Returning signed-in user: hydrate their collection/perks from the server.
+        resetCollectionForUserChange();
+      }
       if (active) setIsLoading(false);
     })();
     return () => {
@@ -120,10 +160,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           discovery,
         );
 
-        const profile = await fetchUserInfoAsync(
-          { accessToken: tokenResponse.accessToken },
-          discovery,
-        );
+        // Read the profile from the id token's claims rather than /userinfo (see
+        // decodeJwtPayload above). `openid profile email` populate sub/name/email/picture.
+        const claims = decodeJwtPayload(tokenResponse.idToken) ?? {};
+        const profile: AuthUser = {
+          sub: String(claims.sub ?? ''),
+          name: typeof claims.name === 'string' ? claims.name : undefined,
+          email: typeof claims.email === 'string' ? claims.email : undefined,
+          picture: typeof claims.picture === 'string' ? claims.picture : undefined,
+        };
+
+        // Without a sub we cannot key anything per-user; treat as a failed sign-in.
+        if (!profile.sub) {
+          if (active) setIsLoading(false);
+          return;
+        }
 
         const session: StoredSession = {
           tokens: {
@@ -133,11 +184,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             expiresIn: tokenResponse.expiresIn,
             issuedAt: tokenResponse.issuedAt,
           },
-          user: profile as AuthUser,
+          user: profile,
         };
 
         await saveSession(session);
-        if (active) setUser(session.user);
+        if (active) {
+          setUser(session.user);
+          // The collection/perks stores are user-scoped: reload them for the new user.
+          resetCollectionForUserChange();
+        }
       } catch {
         // Exchange or profile fetch failed: leave the user signed out. The button
         // stays available for a retry.
@@ -195,6 +250,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (result.type === 'success') {
         await clearSession();
         setUser(null);
+        // Clear the previous user's collection/perks so nothing leaks into a later session.
+        resetCollectionForUserChange();
       }
     } catch {
       // Browser error: leave the local session intact so the user is not stranded in a
