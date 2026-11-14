@@ -165,19 +165,32 @@ export async function activateAndComplete(flowerId: string, pathIds: string[]): 
   }
 
   let awardedBonus = false;
+  const bonusLanded = (data: unknown): boolean => {
+    const r = (data ?? {}) as Record<string, unknown>;
+    return (typeof r.awarded === 'number' && r.awarded > 0) || r.completed === true;
+  };
+
   for (const pathId of pathIds) {
     try {
       const { data, error } = await supabase.rpc('complete_path_if_done', { p_path: pathId });
       if (error) throw error;
       // complete_path_if_done returns { completed, already, awarded }. A positive `awarded`
       // (or completed=true with a bonus) means the DB balance changed under us.
-      const r = (data ?? {}) as Record<string, unknown>;
-      if ((typeof r.awarded === 'number' && r.awarded > 0) || r.completed === true) {
-        awardedBonus = true;
-      }
+      if (bonusLanded(data)) awardedBonus = true;
     } catch (e) {
       console.warn('[collection] complete_path_if_done failed:', e);
     }
+  }
+
+  // Daily-quest completion bonus. Safe to call after ANY check-in: the RPC self-validates
+  // that the scanned flower is today's daily quest and pays the flat bonus at most once
+  // per Bucharest day. No catalogue knowledge needed here.
+  try {
+    const { data, error } = await supabase.rpc('complete_daily_if_done');
+    if (error) throw error;
+    if (bonusLanded(data)) awardedBonus = true;
+  } catch (e) {
+    console.warn('[collection] complete_daily_if_done failed:', e);
   }
 
   // Reconcile balance + lifetime from the DB once, only if a bonus landed.

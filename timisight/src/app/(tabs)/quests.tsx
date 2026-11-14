@@ -12,6 +12,10 @@ import { useFlowers } from '@/hooks/use-flowers';
 import { useLang } from '@/hooks/use-lang';
 import { refreshQuests, useQuests, type PathQuest } from '@/hooks/use-quests';
 
+// Flat daily-quest completion bonus, shown on the daily card. Must match DAILY_BONUS in
+// web/supabase/quests.sql (complete_daily_if_done) — the award itself happens server-side.
+const DAILY_BONUS = 100;
+
 /**
  * On-theme collapsible section, styled with the app's neo-brutalist Brand tokens
  * (paper surface, ink border, hard shadow) instead of the generic dark-themed
@@ -92,6 +96,7 @@ export default function QuestsScreen() {
                 <Text style={sx.cardMeta}>
                   {daily.collectedToday ? `✓ ${t.quests.dailyDone}` : t.quests.tapToScan}
                 </Text>
+                <Text style={sx.cardBonus}>{t.quests.dailyBonus}: +{DAILY_BONUS} {t.points}</Text>
               </View>
               <Text style={sx.state}>{daily.collectedToday ? '✓' : '▶'}</Text>
             </Pressable>
@@ -234,6 +239,7 @@ const sx = StyleSheet.create({
   dot: { width: 22, height: 22, borderRadius: 11, borderWidth: 2, borderColor: Brand.ink },
   cardName: { fontSize: 15, fontWeight: '800', color: Brand.ink },
   cardMeta: { fontSize: 13, color: Brand.inkFaint, marginTop: 2 },
+  cardBonus: { fontSize: 12, fontWeight: '800', color: Brand.blue, marginTop: 3 },
   state: { fontSize: 16, fontWeight: '800', color: Brand.blue },
 
   pathCard: { backgroundColor: Brand.white, borderWidth: BORDER, borderColor: Brand.ink, borderRadius: 14, padding: 14, gap: 10, ...hardShadow(4) },

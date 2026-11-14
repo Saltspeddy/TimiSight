@@ -302,6 +302,70 @@ end $$;
 revoke execute on function get_daily_quest() from public;
 grant execute on function get_daily_quest() to authenticated;
 
+-- ---------------------------------------------------------------------------
+-- complete_daily_if_done(): if the caller has collected TODAY'S daily-quest flower
+-- (the one get_daily_quest assigned for the Europe/Bucharest date), award the one-time
+-- daily completion bonus. Separate from the normal per-flower scan points: the flower's
+-- own points are granted by checkin_flower; THIS adds a flat bonus for finishing the
+-- daily. Idempotent per (sub, date) via reason 'daily_complete:<date>' and the
+-- one_reward_each_a0 index inside award_points_a0, so it pays at most once per day.
+--
+-- The bonus is a demo-tunable constant (DAILY_BONUS below). It is safe to call after any
+-- check-in: if the scanned flower is not today's daily, or it hasn't been collected yet,
+-- it simply does nothing. Returns jsonb { completed, already, awarded }.
+-- ---------------------------------------------------------------------------
+create or replace function complete_daily_if_done() returns jsonb
+language plpgsql security definer set search_path = public as $$
+declare
+  v_sub text := current_sub();
+  v_date date := (now() at time zone 'Europe/Bucharest')::date;
+  v_day_start timestamptz := (v_date::timestamp at time zone 'Europe/Bucharest');
+  v_flower text;
+  v_bonus int := 100;  -- DAILY_BONUS: demo value. Flat daily-completion reward.
+  v_reason text := 'daily_complete:' || v_date::text;
+  v_collected boolean;
+begin
+  if v_sub is null then
+    raise exception 'not signed in';
+  end if;
+
+  -- The daily quest assigned for today (if get_daily_quest has run for this user/date).
+  select flower_id into v_flower
+  from user_daily_quests
+  where auth0_sub = v_sub and quest_date = v_date;
+  if v_flower is null then
+    return jsonb_build_object('completed', false, 'already', false, 'awarded', 0);
+  end if;
+
+  -- Must have collected that flower on/after Bucharest midnight of the quest date.
+  v_collected := exists (
+    select 1 from user_flowers uf
+    where uf.auth0_sub = v_sub
+      and uf.flower_id = v_flower
+      and uf.collected_at >= v_day_start
+  );
+  if not v_collected then
+    return jsonb_build_object('completed', false, 'already', false, 'awarded', 0);
+  end if;
+
+  -- Already paid today? (the ledger reason is unique per sub+day via one_reward_each_a0)
+  if exists (
+    select 1 from point_transactions_a0
+    where auth0_sub = v_sub and reason = v_reason and amount > 0
+  ) then
+    return jsonb_build_object('completed', true, 'already', true, 'awarded', 0);
+  end if;
+
+  if v_bonus > 0 then
+    perform award_points_a0(v_sub, v_bonus, v_reason);
+  end if;
+
+  return jsonb_build_object('completed', true, 'already', false, 'awarded', v_bonus);
+end $$;
+
+revoke execute on function complete_daily_if_done() from public;
+grant execute on function complete_daily_if_done() to authenticated;
+
 -- ===========================================================================
 -- SEED (idempotent upserts, same style as flowers.sql)
 -- ===========================================================================
