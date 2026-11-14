@@ -52,7 +52,7 @@ export function FlowerView({ id, scanned = false }: { id: string; scanned?: bool
     return (
       <View style={[s.root, s.center, { paddingTop: insets.top }]}>
         <Text style={s.h1}>{x.notFound}</Text>
-        <Pressable onPress={goBack} style={s.backBtn}><Text style={s.back}>← {t.back}</Text></Pressable>
+        <Pressable onPress={goBack} style={[s.backBtn, { alignSelf: 'center' }]}><Text style={s.back}>← {t.back}</Text></Pressable>
       </View>
     );
   }
