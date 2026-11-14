@@ -1,3 +1,4 @@
+import { Image } from 'expo-image';
 import { router } from 'expo-router';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -17,10 +18,17 @@ export default function HomeScreen() {
         style={styles.root}
         contentContainerStyle={{ paddingBottom: 100 }}
         showsVerticalScrollIndicator={false}>
-        {/* Sticky-style header */}
-        <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
-          <Text style={styles.logo}>{t.appName}</Text>
-          <LangToggle />
+        {/* Full-width banner header with the language toggle overlaid */}
+        <View style={[styles.header, { paddingTop: insets.top }]}>
+          <Image
+            style={styles.banner}
+            source={require('@/assets/images/timisight-banner.png')}
+            contentFit="contain"
+            accessibilityLabel={t.appName}
+          />
+          <View style={[styles.langOverlay, { top: insets.top + 8 }]}>
+            <LangToggle />
+          </View>
         </View>
 
         {/* Hero */}
@@ -88,16 +96,15 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: Brand.paper },
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 18,
-    paddingBottom: 12,
     backgroundColor: Brand.paper,
     borderBottomWidth: BORDER,
     borderBottomColor: Brand.ink,
   },
-  logo: { fontSize: 22, fontWeight: '800', color: Brand.blue },
+  banner: {
+    width: '100%',
+    aspectRatio: 1084 / 310,
+  },
+  langOverlay: { position: 'absolute', right: 14 },
 
   hero: { paddingHorizontal: 20, paddingTop: 28, paddingBottom: 12 },
   h1: { fontSize: 40, lineHeight: 42, fontWeight: '800', color: Brand.ink, letterSpacing: -0.5 },

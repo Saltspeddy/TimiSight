@@ -7,9 +7,6 @@
     "icon": "./assets/images/icon.png",
     "scheme": "timisight",
     "userInterfaceStyle": "automatic",
-    "ios": {
-      "icon": "./assets/expo.icon"
-    },
     "android": {
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
@@ -31,7 +28,7 @@
         {
           "backgroundColor": "#208AEF",
           "image": "./assets/images/splash-icon.png",
-          "imageWidth": 76
+          "imageWidth": 200
         }
       ],
       "expo-secure-store"
@@ -45,6 +42,9 @@
         "domain": "dev-p2iugivimzir6tq0.us.auth0.com",
         "clientId": "pzK3QwxU4Sjjj6903P9RWVPzYfxZjOU0"
       }
+    },
+    "ios": {
+      "bundleIdentifier": "com.anonymous.timisight"
     }
   }
 }
