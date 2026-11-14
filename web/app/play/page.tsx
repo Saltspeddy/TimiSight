@@ -2,6 +2,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { getLeaderboard, getMyRank } from "@/lib/shop-db";
 import ShopList from "./shop-list";
+import { BrandLink } from "../brand";
 import "../account-pages.css";
 
 // Reads the session to highlight the viewer on the leaderboard, so it renders
@@ -24,7 +25,7 @@ export default async function PlayPage() {
     <div className="page">
       <div className="page-card wide">
         <div className="page-top">
-          <Link className="page-logo" href="/">TimeHunt</Link>
+          <BrandLink className="page-logo" />
           <nav className="page-nav" aria-label="Account">
             {signedIn ? (
               <Link href="/profile">← Back to account</Link>
@@ -36,7 +37,7 @@ export default async function PlayPage() {
 
         <h1>Shop &amp; leaderboard</h1>
         <p className="page-sub">
-          Spend the points you earn exploring the city, and see where you stand.
+          Spend the points you earn collecting flowers around the city, and see where you stand.
         </p>
 
         <div className="play-grid">
