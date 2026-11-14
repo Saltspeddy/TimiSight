@@ -1,0 +1,190 @@
+import { Image } from 'expo-image';
+import { router } from 'expo-router';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import Animated, { FadeInDown, ZoomIn } from 'react-native-reanimated';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
+import { BORDER, Brand, hardShadow } from '@/constants/brand';
+import { checkIn, collectedIds, type CheckInResult } from '@/constants/collection';
+import { FLOWERS } from '@/constants/flowers';
+import type { Lang } from '@/constants/site-data';
+import { useLang } from '@/hooks/use-lang';
+
+const TXT = {
+  en: { checked: 'Checked in', already: 'Already in your bouquet', alreadySub: 'Each flower pays points once.',
+    total: 'Total', pts: 'pts', tap: 'Tap this flower’s NFC tag to check in and earn points.', sim: 'Simulate NFC tap (demo)',
+    flower: 'The flower', place: 'The place', rewards: 'Rewards nearby', bouquet: 'Your bouquet',
+    ranking: 'Garden ranking', notFound: 'Flower not found' },
+  ro: { checked: 'Check-in făcut', already: 'Deja în buchetul tău', alreadySub: 'Fiecare floare oferă puncte o singură dată.',
+    total: 'Total', pts: 'puncte', tap: 'Atinge eticheta NFC a acestei flori ca să faci check-in și să câștigi puncte.', sim: 'Simulează atingerea NFC (demo)',
+    flower: 'Floarea', place: 'Locul', rewards: 'Recompense în apropiere', bouquet: 'Buchetul tău',
+    ranking: 'Clasamentul grădinii', notFound: 'Floarea nu a fost găsită' },
+};
+
+function Section({ title, children }: { title: string; children: ReactNode }) {
+  return (
+    <View>
+      <Text style={s.h2}>{title}</Text>
+      {children}
+    </View>
+  );
+}
+
+export function FlowerView({ id, scanned = false }: { id: string; scanned?: boolean }) {
+  const [lang, t] = useLang();
+  const x = TXT[lang];
+  const insets = useSafeAreaInsets();
+  const flower = FLOWERS.find((f) => f.id === id);
+  const [result, setResult] = useState<CheckInResult | null>(null);
+  const ran = useRef(false);
+
+  // The check-in happens once, automatically, when the screen is opened from a tag.
+  useEffect(() => {
+    if (!scanned || !flower || ran.current) return;
+    ran.current = true;
+    setResult(checkIn(flower));
+  }, [scanned, flower]);
+
+  const goBack = () => (router.canGoBack() ? router.back() : router.replace('/'));
+
+  if (!flower) {
+    return (
+      <View style={[s.root, s.center, { paddingTop: insets.top }]}>
+        <Text style={s.h1}>{x.notFound}</Text>
+        <Pressable onPress={goBack} style={s.backBtn}><Text style={s.back}>← {t.back}</Text></Pressable>
+      </View>
+    );
+  }
+
+  const other: Lang = lang === 'en' ? 'ro' : 'en';
+  const owned = collectedIds()
+    .map((fid) => FLOWERS.find((f) => f.id === fid))
+    .filter((f) => !!f);
+
+  return (
+    <View style={s.root}>
+      <ScrollView
+        contentContainerStyle={{ padding: 20, paddingTop: insets.top + 16, paddingBottom: insets.bottom + 40 }}
+        showsVerticalScrollIndicator={false}>
+        <Pressable onPress={goBack} style={s.backBtn} accessibilityRole="button">
+          <Text style={s.back}>← {t.back}</Text>
+        </Pressable>
+
+        <Animated.View entering={ZoomIn.springify().damping(14)} style={[s.mat, { backgroundColor: flower.color }]}>
+          <View style={s.photo}>
+            {flower.image ? (
+              <Image source={flower.image} style={StyleSheet.absoluteFill} contentFit="contain" />
+            ) : (
+              <Text style={s.placeholder}>[Photo]</Text>
+            )}
+          </View>
+        </Animated.View>
+
+        <Animated.View entering={FadeInDown.delay(250)}>
+          <Text style={s.h1}>{flower.name[lang]}</Text>
+          <Text style={s.sub}>{flower.name[other]}</Text>
+        </Animated.View>
+
+        {scanned && result && (
+          <Animated.View
+            entering={FadeInDown.delay(450).springify()}
+            style={[s.card, result.already ? s.cardAlready : s.cardNew]}>
+            <View style={{ flex: 1 }}>
+              <Text style={s.cardTitle}>✓ {result.already ? x.already : x.checked}</Text>
+              <Text style={s.cardSub}>
+                {result.already ? `${x.alreadySub} ` : ''}{x.total}: {result.total} {x.pts}
+              </Text>
+            </View>
+            {!result.already && (
+              <Animated.View entering={ZoomIn.delay(750).springify()} style={s.earned}>
+                <Text style={s.earnedText}>+{result.earned}</Text>
+              </Animated.View>
+            )}
+          </Animated.View>
+        )}
+
+        {!scanned && (
+          <>
+            <Text style={s.hint}>{x.tap}</Text>
+            {/* Demo only: simulates the tag. Delete before the final release. */}
+            <Pressable onPress={() => router.push(`/f/${flower.id}`)} style={s.sim} accessibilityRole="button">
+              <Text style={s.simText}>{x.sim}</Text>
+            </Pressable>
+          </>
+        )}
+
+        <Section title={x.flower}>
+          <Text style={s.body}>{flower.about[lang]}</Text>
+        </Section>
+
+        <Section title={x.place}>
+          <Text style={s.placeName}>{flower.place.name[lang]}</Text>
+          <Text style={s.body}>{flower.place.text[lang]}</Text>
+        </Section>
+
+        <Section title={x.rewards}>
+          {flower.rewards.map((r) => (
+            <View key={r.id} style={s.reward}>
+              <View style={{ flex: 1 }}>
+                <Text style={s.rTitle}>{r.title[lang]}</Text>
+                <Text style={s.rPartner}>{r.partner}</Text>
+              </View>
+              <View style={s.cost}><Text style={s.costText}>{r.cost} {x.pts}</Text></View>
+            </View>
+          ))}
+        </Section>
+
+        <Section title={x.bouquet}>
+          <View style={s.dots}>
+            {owned.map((f) => (
+              <View key={f!.id} style={[s.dot, { backgroundColor: f!.color }, f!.id === flower.id && s.dotCurrent]}>
+                <Text style={s.dotText}>{f!.name[lang][0]}</Text>
+              </View>
+            ))}
+          </View>
+        </Section>
+
+        <Pressable onPress={() => router.push('/leaderboard')} style={s.rank} accessibilityRole="button">
+          <Text style={s.rankText}>{x.ranking}</Text>
+        </Pressable>
+      </ScrollView>
+    </View>
+  );
+}
+
+const s = StyleSheet.create({
+  root: { flex: 1, backgroundColor: Brand.paper },
+  center: { alignItems: 'center', justifyContent: 'center', gap: 16 },
+  backBtn: { alignSelf: 'flex-start', borderWidth: 2, borderColor: Brand.ink, borderRadius: 99, backgroundColor: Brand.white, paddingVertical: 5, paddingHorizontal: 14, marginBottom: 14 },
+  back: { color: Brand.blue, fontWeight: '800' },
+  mat: { borderWidth: BORDER, borderColor: Brand.ink, borderRadius: 20, padding: 10, ...hardShadow(6) },
+  photo: { height: 260, borderRadius: 12, backgroundColor: Brand.white, overflow: 'hidden', alignItems: 'center', justifyContent: 'center' },
+  placeholder: { color: Brand.inkFaint, fontWeight: '700' },
+  h1: { fontSize: 32, lineHeight: 36, fontWeight: '800', color: Brand.ink, letterSpacing: -0.5, marginTop: 20 },
+  sub: { fontSize: 19, fontStyle: 'italic', color: Brand.inkFaint, marginTop: 2 },
+  card: { flexDirection: 'row', alignItems: 'center', gap: 14, borderWidth: BORDER, borderColor: Brand.ink, borderRadius: 14, padding: 14, marginTop: 20, ...hardShadow(4) },
+  cardNew: { backgroundColor: Brand.yellow },
+  cardAlready: { backgroundColor: Brand.white },
+  cardTitle: { fontSize: 18, fontWeight: '800', color: Brand.ink },
+  cardSub: { fontSize: 14, color: Brand.inkSoft, marginTop: 2 },
+  earned: { backgroundColor: Brand.orange, borderWidth: 2, borderColor: Brand.ink, borderRadius: 99, paddingHorizontal: 14, paddingVertical: 6 },
+  earnedText: { fontSize: 22, fontWeight: '800', color: Brand.ink },
+  hint: { color: Brand.inkFaint, fontSize: 14, marginTop: 14 },
+  sim: { alignSelf: 'flex-start', marginTop: 10, borderWidth: 2, borderColor: Brand.ink, borderStyle: 'dashed', borderRadius: 10, paddingVertical: 8, paddingHorizontal: 12 },
+  simText: { color: Brand.ink, fontWeight: '800', fontSize: 14 },
+  h2: { fontSize: 22, fontWeight: '800', color: Brand.ink, marginTop: 28, marginBottom: 10 },
+  body: { fontSize: 17, lineHeight: 26, color: Brand.inkSoft },
+  placeName: { fontSize: 17, fontWeight: '800', color: Brand.ink, marginBottom: 4 },
+  reward: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: Brand.white, borderWidth: 2, borderColor: Brand.ink, borderRadius: 12, padding: 12, marginBottom: 10 },
+  rTitle: { fontSize: 16, fontWeight: '800', color: Brand.ink },
+  rPartner: { fontSize: 13, color: Brand.inkFaint },
+  cost: { backgroundColor: Brand.blue, borderRadius: 99, paddingHorizontal: 12, paddingVertical: 4 },
+  costText: { color: '#fff', fontWeight: '800', fontSize: 13 },
+  dots: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
+  dot: { width: 44, height: 44, borderRadius: 22, borderWidth: 3, borderColor: Brand.ink, alignItems: 'center', justifyContent: 'center' },
+  dotCurrent: { transform: [{ scale: 1.15 }], borderWidth: 4 },
+  dotText: { fontWeight: '800', color: Brand.ink, fontSize: 16 },
+  rank: { marginTop: 30, backgroundColor: Brand.blue, borderWidth: BORDER, borderColor: Brand.ink, borderRadius: 10, paddingVertical: 14, alignItems: 'center', ...hardShadow(4) },
+  rankText: { color: '#fff', fontWeight: '800', fontSize: 16 },
+});
