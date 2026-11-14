@@ -6,6 +6,8 @@ TimiSight turns Timișoara — *the City of Flowers* — into a living, collecti
 
 Every flower stands for a place, event, or business in the city. Scan the flower outside the Opera House and you unlock an animated, educational popup about the opera's history. Scan one at a café, a museum, or a festival stall and you learn its story the same way. The city becomes something you explore and collect, not just walk past.
 
+#### Project backlog -> https://github.com/users/Saltspeddy/projects/4/views/1
+
 ## The idea
 
 - **Collect the city.** Each flower is a real, physical object with an NFC tag. Tapping it captures that flower to your account.
