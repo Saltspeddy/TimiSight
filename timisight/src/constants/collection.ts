@@ -15,3 +15,5 @@ export function checkIn(flower: Flower): CheckInResult {
   total += flower.points;
   return { already: false, earned: flower.points, total };
 }
+
+export const totalPoints = () => total;

@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import Animated, { FadeInDown, ZoomIn } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { FlowerStory } from '@/components/flower-story';
 
 import { BORDER, Brand, hardShadow } from '@/constants/brand';
 import { checkIn, collectedIds, type CheckInResult } from '@/constants/collection';
@@ -12,11 +13,11 @@ import type { Lang } from '@/constants/site-data';
 import { useLang } from '@/hooks/use-lang';
 
 const TXT = {
-  en: { checked: 'Checked in', already: 'Already in your bouquet', alreadySub: 'Each flower pays points once.',
+  en: { watch: '▶ Watch the story', checked: 'Checked in', already: 'Already in your bouquet', alreadySub: 'Each flower pays points once.',
     total: 'Total', pts: 'pts', tap: 'Tap this flower’s NFC tag to check in and earn points.', sim: 'Simulate NFC tap (demo)',
     flower: 'The flower', place: 'The place', rewards: 'Rewards nearby', bouquet: 'Your bouquet',
     ranking: 'Garden ranking', notFound: 'Flower not found' },
-  ro: { checked: 'Check-in făcut', already: 'Deja în buchetul tău', alreadySub: 'Fiecare floare oferă puncte o singură dată.',
+  ro: {watch: '▶ Watch the story', checked: 'Check-in făcut', already: 'Deja în buchetul tău', alreadySub: 'Fiecare floare oferă puncte o singură dată.',
     total: 'Total', pts: 'puncte', tap: 'Atinge eticheta NFC a acestei flori ca să faci check-in și să câștigi puncte.', sim: 'Simulează atingerea NFC (demo)',
     flower: 'Floarea', place: 'Locul', rewards: 'Recompense în apropiere', bouquet: 'Buchetul tău',
     ranking: 'Clasamentul grădinii', notFound: 'Floarea nu a fost găsită' },
@@ -37,13 +38,16 @@ export function FlowerView({ id, scanned = false }: { id: string; scanned?: bool
   const insets = useSafeAreaInsets();
   const flower = FLOWERS.find((f) => f.id === id);
   const [result, setResult] = useState<CheckInResult | null>(null);
+  const [story, setStory] = useState(false);
   const ran = useRef(false);
 
   // The check-in happens once, automatically, when the screen is opened from a tag.
   useEffect(() => {
     if (!scanned || !flower || ran.current) return;
     ran.current = true;
-    setResult(checkIn(flower));
+    const res = checkIn(flower);
+    setResult(res);
+    if (!res.already) setStory(true);
   }, [scanned, flower]);
 
   const goBack = () => (router.canGoBack() ? router.back() : router.replace('/'));
@@ -85,6 +89,10 @@ export function FlowerView({ id, scanned = false }: { id: string; scanned?: bool
           <Text style={s.h1}>{flower.name[lang]}</Text>
           <Text style={s.sub}>{flower.name[other]}</Text>
         </Animated.View>
+
+        <Pressable onPress={() => setStory(true)} style={s.watch} accessibilityRole="button">
+          <Text style={s.watchText}>{x.watch}</Text>
+        </Pressable>
 
         {scanned && result && (
           <Animated.View
