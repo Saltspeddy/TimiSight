@@ -1,41 +1,49 @@
-// Shared content for TimiSight, ported from the uniprep website (lib/site-data.ts).
-// Keep this in sync with the web app so both show the same copy and places.
+// Shared copy for the TimiSight mobile app.
+//
+// Languages follow the communities that have shaped Timișoara for centuries: English for
+// visitors, then Romanian, German, Hungarian and Serbian. Each language is listed by its
+// own name so it is recognisable to the people who speak it. Serbian is written in
+// Cyrillic, the script the Serbian community in Romania uses officially.
+//
+// To add a language: add it to LANGUAGES, then let TypeScript list every table that
+// still needs it (T, OFFERS, badges, flowers, stories, and the small TXT tables).
 
-export type Lang = 'en' | 'ro';
+export const LANGUAGES = [
+  { code: 'en', label: 'English' },
+  { code: 'ro', label: 'Română' },
+  { code: 'de', label: 'Deutsch' },
+  { code: 'hu', label: 'Magyar' },
+  { code: 'sr', label: 'Српски' },
+] as const;
+
+export type Lang = (typeof LANGUAGES)[number]['code'];
+
+/** All language codes, in display order. */
+export const LANG_CODES: Lang[] = LANGUAGES.map((l) => l.code);
 
 export const T = {
   en: {
     appName: 'TimiSight',
     tabs: { home: 'Home', places: 'Garden', shop: 'Shop', board: 'Leaderboard', account: 'Account' },
-    heroTitle: 'Walk Timișoara. See it as it was.',
+    heroTitle: 'Bloom in Timișoara.',
     heroText:
-      'Visit real places in the city, check in to climb the leaderboard, and point your camera to see the past appear in AR.',
-    cta: 'See the places',
-    howTitle: 'Three steps through time',
+      'Flowers are scattered all over the city. Tap one with your phone to collect it, learn the story of its place and earn badges.',
+    cta: 'Open the garden',
+    stamp: ['Timișoara', 'Bloom', '2026'] as [string, string, string],
+    howTitle: 'Three steps to a full garden',
     how: [
-      ['Explore', 'Find landmarks and social events on the city map.'],
-      ['Check in', 'Visit a place, scan it, and your name moves up the leaderboard.'],
-      ['See the past', 'Open the camera and watch older versions of the place appear in AR.'],
+      ['Find', 'Spot a flower somewhere in the city. Each one stands for a place, an event or a local business.'],
+      ['Tap', 'Hold your phone to its NFC tag. The flower joins your garden and earns you points.'],
+      ['Learn', 'Read its story, collect badges and spend your points on perks from local partners.'],
     ] as [string, string][],
     teamTitle: 'The team',
-    teamText: 'Built at UniHack, Museum track.',
-    roles: ['Frontend', 'Backend', 'AR', 'Design'],
-    placesTitle: 'Five places, five QR codes',
-    placesText: 'Scan a code on site to open that place’s page. Two are live in this demo.',
-    open: 'Open',
-    soon: 'Coming soon',
+    teamText: 'Built at UniHack 2026.',
     back: 'Back',
-    history: 'Then and now',
-    then: 'Then',
-    now: 'Now',
-    drag: 'Drag to compare',
-    checkin: 'Check in here',
-    checked: 'Checked in. +100 points (demo).',
     boardTitle: 'Leaderboard',
-    boardText: 'Check in at places to earn points and climb the ranking.',
+    boardText: 'Collect flowers to earn points and climb the ranking.',
     points: 'pts',
     shopTitle: 'Points shop',
-    shopText: 'Spend the points you earn exploring the city.',
+    shopText: 'Spend the points you earn collecting flowers.',
     shopBalance: 'Your balance',
     shopRedeem: 'Redeem',
     shopSoldOut: 'Sold out',
@@ -50,13 +58,13 @@ export const T = {
     shopClaim: 'Claim',
     shopClaimed: 'claimed',
     accountTitle: 'Your account',
-    accountText: 'Track your points and climb the leaderboard.',
+    accountText: 'Track your points and watch your garden grow.',
     accountBalance: 'Points balance',
     accountLifetime: 'Lifetime earned',
     accountRank: 'Leaderboard rank',
     accountLanguage: 'Language',
     loginTitle: 'Welcome to TimiSight',
-    loginText: 'Log in to explore the city and climb the leaderboard.',
+    loginText: 'Log in to start collecting the flowers of Timișoara.',
     authLogin: 'Log in with Auth0',
     authSigningIn: 'Signing in…',
     authLogout: 'Log out',
@@ -67,36 +75,25 @@ export const T = {
   ro: {
     appName: 'TimiSight',
     tabs: { home: 'Acasă', places: 'Grădina', shop: 'Magazin', board: 'Clasament', account: 'Cont' },
-    heroTitle: 'Plimbă-te prin Timișoara. Vezi-o așa cum a fost.',
+    heroTitle: 'Înflorește în Timișoara.',
     heroText:
-      'Vizitează locuri reale din oraș, fă check-in ca să urci în clasament și îndreaptă camera spre trecut, în realitate augmentată.',
-    cta: 'Vezi locurile',
-    howTitle: 'Trei pași prin timp',
+      'Flori ascunse peste tot în oraș. Atinge una cu telefonul ca s-o colecționezi, să afli povestea locului ei și să câștigi insigne.',
+    cta: 'Deschide grădina',
+    stamp: ['Timișoara', 'Floare', '2026'] as [string, string, string],
+    howTitle: 'Trei pași până la grădina completă',
     how: [
-      ['Explorează', 'Găsește repere și evenimente sociale pe harta orașului.'],
-      ['Fă check-in', 'Vizitează un loc, scanează-l și urci în clasament.'],
-      ['Vezi trecutul', 'Deschide camera și privește cum apar versiuni mai vechi ale locului în AR.'],
+      ['Găsește', 'Descoperă o floare undeva în oraș. Fiecare reprezintă un loc, un eveniment sau o afacere locală.'],
+      ['Atinge', 'Apropie telefonul de eticheta ei NFC. Floarea intră în grădina ta și îți aduce puncte.'],
+      ['Învață', 'Citește povestea ei, strânge insigne și cheltuiește punctele pe beneficii de la parteneri locali.'],
     ] as [string, string][],
     teamTitle: 'Echipa',
-    teamText: 'Creat la UniHack, secțiunea Muzeu.',
-    roles: ['Frontend', 'Backend', 'AR', 'Design'],
-    placesTitle: 'Cinci locuri, cinci coduri QR',
-    placesText:
-      'Scanează un cod la fața locului ca să deschizi pagina acelui loc. Două sunt active în demo.',
-    open: 'Deschide',
-    soon: 'În curând',
+    teamText: 'Creat la UniHack 2026.',
     back: 'Înapoi',
-    history: 'Atunci și acum',
-    then: 'Atunci',
-    now: 'Acum',
-    drag: 'Trage pentru a compara',
-    checkin: 'Fă check-in aici',
-    checked: 'Check-in făcut. +100 puncte (demo).',
     boardTitle: 'Clasament',
-    boardText: 'Fă check-in la locuri ca să câștigi puncte și să urci în clasament.',
+    boardText: 'Colecționează flori ca să câștigi puncte și să urci în clasament.',
     points: 'pct',
     shopTitle: 'Magazin de puncte',
-    shopText: 'Cheltuie punctele câștigate explorând orașul.',
+    shopText: 'Cheltuiește punctele câștigate colecționând flori.',
     shopBalance: 'Soldul tău',
     shopRedeem: 'Revendică',
     shopSoldOut: 'Epuizat',
@@ -111,13 +108,13 @@ export const T = {
     shopClaim: 'Revendică',
     shopClaimed: 'revendicate',
     accountTitle: 'Contul tău',
-    accountText: 'Urmărește-ți punctele și urcă în clasament.',
+    accountText: 'Urmărește-ți punctele și vezi cum crește grădina ta.',
     accountBalance: 'Sold puncte',
     accountLifetime: 'Total câștigat',
     accountRank: 'Loc în clasament',
     accountLanguage: 'Limbă',
     loginTitle: 'Bun venit la TimiSight',
-    loginText: 'Conectează-te ca să explorezi orașul și să urci în clasament.',
+    loginText: 'Conectează-te ca să începi să colecționezi florile Timișoarei.',
     authLogin: 'Conectare cu Auth0',
     authSigningIn: 'Se conectează…',
     authLogout: 'Deconectare',
@@ -125,62 +122,170 @@ export const T = {
     authSignedOutHint: 'Conectează-te pentru a-ți sincroniza contul.',
     footer: 'Făcut în Timișoara pentru UniHack.',
   },
+  // German. The city is "Temeswar" in German, as it has been for the Banat Swabians.
+  de: {
+    appName: 'TimiSight',
+    tabs: { home: 'Start', places: 'Garten', shop: 'Shop', board: 'Rangliste', account: 'Konto' },
+    heroTitle: 'Erblühe in Temeswar.',
+    heroText:
+      'Überall in der Stadt sind Blumen versteckt. Halte dein Handy an eine Blume, um sie zu sammeln, die Geschichte ihres Ortes zu erfahren und Abzeichen zu verdienen.',
+    cta: 'Garten öffnen',
+    stamp: ['Temeswar', 'Blüte', '2026'] as [string, string, string],
+    howTitle: 'In drei Schritten zum vollen Garten',
+    how: [
+      ['Finden', 'Entdecke irgendwo in der Stadt eine Blume. Jede steht für einen Ort, ein Ereignis oder ein lokales Geschäft.'],
+      ['Antippen', 'Halte dein Handy an ihren NFC-Tag. Die Blume kommt in deinen Garten und bringt dir Punkte.'],
+      ['Erfahren', 'Lies ihre Geschichte, sammle Abzeichen und löse deine Punkte bei lokalen Partnern ein.'],
+    ] as [string, string][],
+    teamTitle: 'Das Team',
+    teamText: 'Entstanden beim UniHack 2026.',
+    back: 'Zurück',
+    boardTitle: 'Rangliste',
+    boardText: 'Sammle Blumen, verdiene Punkte und steige in der Rangliste auf.',
+    points: 'Pkt.',
+    shopTitle: 'Punkte-Shop',
+    shopText: 'Gib die Punkte aus, die du beim Blumensammeln verdienst.',
+    shopBalance: 'Dein Guthaben',
+    shopRedeem: 'Einlösen',
+    shopSoldOut: 'Ausverkauft',
+    shopUnlimited: 'unbegrenzt',
+    shopLeft: 'übrig',
+    shopNotEnough: 'Nicht genug Punkte',
+    shopActiveTitle: 'Aktive Vorteile',
+    shopActiveEmpty: 'Noch keine aktiven Vorteile. Löse unten einen Pass ein.',
+    shopActivate: 'Aktivieren',
+    shopActive: 'Aktiv',
+    shopDeactivate: 'Deaktivieren',
+    shopClaim: 'Beanspruchen',
+    shopClaimed: 'beansprucht',
+    accountTitle: 'Dein Konto',
+    accountText: 'Verfolge deine Punkte und sieh deinen Garten wachsen.',
+    accountBalance: 'Punktestand',
+    accountLifetime: 'Insgesamt verdient',
+    accountRank: 'Platz in der Rangliste',
+    accountLanguage: 'Sprache',
+    loginTitle: 'Willkommen bei TimiSight',
+    loginText: 'Melde dich an und sammle die Blumen von Temeswar.',
+    authLogin: 'Mit Auth0 anmelden',
+    authSigningIn: 'Anmeldung läuft …',
+    authLogout: 'Abmelden',
+    authLoading: 'Wird geladen …',
+    authSignedOutHint: 'Melde dich an, um dein Konto zu synchronisieren.',
+    footer: 'Gemacht in Temeswar für UniHack.',
+  },
+  // Hungarian. The city is "Temesvár" in Hungarian.
+  hu: {
+    appName: 'TimiSight',
+    tabs: { home: 'Kezdőlap', places: 'Kert', shop: 'Bolt', board: 'Ranglista', account: 'Fiók' },
+    heroTitle: 'Virágozz Temesváron.',
+    heroText:
+      'A városban mindenfelé virágok bújnak meg. Érintsd hozzá a telefonod, hogy összegyűjtsd, megismerd a helyének történetét, és jelvényeket szerezz.',
+    cta: 'A kert megnyitása',
+    stamp: ['Temesvár', 'Virág', '2026'] as [string, string, string],
+    howTitle: 'Három lépés a teljes kertig',
+    how: [
+      ['Keresd meg', 'Fedezz fel egy virágot valahol a városban. Mindegyik egy helyet, eseményt vagy helyi vállalkozást képvisel.'],
+      ['Érintsd meg', 'Tartsd a telefonod az NFC-címkéjéhez. A virág bekerül a kertedbe, és pontokat kapsz érte.'],
+      ['Ismerd meg', 'Olvasd el a történetét, gyűjts jelvényeket, és váltsd be a pontjaidat helyi partnerek kedvezményeire.'],
+    ] as [string, string][],
+    teamTitle: 'A csapat',
+    teamText: 'A UniHack 2026-on készült.',
+    back: 'Vissza',
+    boardTitle: 'Ranglista',
+    boardText: 'Gyűjts virágokat, szerezz pontokat, és kapaszkodj följebb a ranglistán.',
+    points: 'pont',
+    shopTitle: 'Pontbolt',
+    shopText: 'Költsd el a virággyűjtéssel szerzett pontjaidat.',
+    shopBalance: 'Egyenleged',
+    shopRedeem: 'Beváltás',
+    shopSoldOut: 'Elfogyott',
+    shopUnlimited: 'korlátlan',
+    shopLeft: 'maradt',
+    shopNotEnough: 'Nincs elég pontod',
+    shopActiveTitle: 'Aktív kedvezmények',
+    shopActiveEmpty: 'Még nincs aktív kedvezmény. Válts be egy bérletet lent.',
+    shopActivate: 'Aktiválás',
+    shopActive: 'Aktív',
+    shopDeactivate: 'Deaktiválás',
+    shopClaim: 'Igénylés',
+    shopClaimed: 'igényelve',
+    accountTitle: 'A fiókod',
+    accountText: 'Kövesd a pontjaidat, és nézd, ahogy nő a kerted.',
+    accountBalance: 'Pontegyenleg',
+    accountLifetime: 'Összesen szerzett',
+    accountRank: 'Helyezés a ranglistán',
+    accountLanguage: 'Nyelv',
+    loginTitle: 'Üdvözlünk a TimiSightban',
+    loginText: 'Jelentkezz be, és kezdd el gyűjteni Temesvár virágait.',
+    authLogin: 'Bejelentkezés Auth0-val',
+    authSigningIn: 'Bejelentkezés…',
+    authLogout: 'Kijelentkezés',
+    authLoading: 'Betöltés…',
+    authSignedOutHint: 'Jelentkezz be a fiókod szinkronizálásához.',
+    footer: 'Temesváron készült a UniHack számára.',
+  },
+  // Serbian, in Cyrillic. The city is "Темишвар" in Serbian.
+  sr: {
+    appName: 'TimiSight',
+    tabs: { home: 'Почетна', places: 'Врт', shop: 'Продавница', board: 'Ранг-листа', account: 'Налог' },
+    heroTitle: 'Процвети у Темишвару.',
+    heroText:
+      'Цвеће је расуто по целом граду. Принеси телефон цвету да га сакупиш, сазнаш причу његовог места и освојиш значке.',
+    cta: 'Отвори врт',
+    stamp: ['Темишвар', 'Цвет', '2026'] as [string, string, string],
+    howTitle: 'Три корака до пуног врта',
+    how: [
+      ['Пронађи', 'Угледај цвет негде у граду. Сваки представља место, догађај или локални бизнис.'],
+      ['Додирни', 'Принеси телефон његовој NFC ознаци. Цвет улази у твој врт и доноси ти поене.'],
+      ['Сазнај', 'Прочитај његову причу, сакупљај значке и потроши поене на погодности локалних партнера.'],
+    ] as [string, string][],
+    teamTitle: 'Тим',
+    teamText: 'Направљено на UniHack 2026.',
+    back: 'Назад',
+    boardTitle: 'Ранг-листа',
+    boardText: 'Сакупљај цвеће, зарађуј поене и пењи се на ранг-листи.',
+    points: 'поена',
+    shopTitle: 'Продавница поена',
+    shopText: 'Потроши поене које зарадиш сакупљајући цвеће.',
+    shopBalance: 'Твоје стање',
+    shopRedeem: 'Искористи',
+    shopSoldOut: 'Распродато',
+    shopUnlimited: 'неограничено',
+    shopLeft: 'преостало',
+    shopNotEnough: 'Недовољно поена',
+    shopActiveTitle: 'Активне погодности',
+    shopActiveEmpty: 'Још нема активних погодности. Искористи пропусницу испод.',
+    shopActivate: 'Активирај',
+    shopActive: 'Активно',
+    shopDeactivate: 'Деактивирај',
+    shopClaim: 'Преузми',
+    shopClaimed: 'преузето',
+    accountTitle: 'Твој налог',
+    accountText: 'Прати своје поене и гледај како твој врт расте.',
+    accountBalance: 'Стање поена',
+    accountLifetime: 'Укупно зарађено',
+    accountRank: 'Место на ранг-листи',
+    accountLanguage: 'Језик',
+    loginTitle: 'Добродошли у TimiSight',
+    loginText: 'Пријави се и почни да сакупљаш цвеће Темишвара.',
+    authLogin: 'Пријава преко Auth0',
+    authSigningIn: 'Пријављивање…',
+    authLogout: 'Одјави се',
+    authLoading: 'Учитавање…',
+    authSignedOutHint: 'Пријави се да синхронизујеш налог.',
+    footer: 'Направљено у Темишвару за UniHack.',
+  },
 } as const;
 
-// Translations object for a single language. Using the union of both languages
-// keeps `t` usable regardless of which language is active.
+// Translations object for a single language. Using the union of all languages
+// keeps `t` usable regardless of which language is active, and TypeScript requires
+// every language to define every key.
 export type Tr = (typeof T)[Lang];
 
-export type Copy = { name: string; text?: string; era?: string };
-export type Place = {
-  id: string;
-  live: boolean;
-  year?: number;
-  thenImg?: string;
-  nowImg?: string;
-  en: Copy;
-  ro: Copy;
-};
-
-export const PLACES: Place[] = [
-  {
-    id: 'opera',
-    live: true,
-    year: 1989,
-    thenImg: 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/4a/Timisoara_Opera.jpg/640px-Timisoara_Opera.jpg',
-    nowImg: 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/4a/Timisoara_Opera.jpg/640px-Timisoara_Opera.jpg',
-    en: {
-      name: 'Opera House, Victory Square',
-      era: 'December 1989',
-      text: 'The steps of the Opera were a gathering point in December 1989, when Timișoara declared itself free of communism. Point your camera here in the app to see the square as it looked during those days.',
-    },
-    ro: {
-      name: 'Opera, Piața Victoriei',
-      era: 'Decembrie 1989',
-      text: 'Treptele Operei au fost loc de adunare în decembrie 1989, când Timișoara s-a declarat liberă de comunism. În aplicație, îndreaptă camera aici ca să vezi piața așa cum arăta în acele zile.',
-    },
-  },
-  {
-    id: 'unirii',
-    live: true,
-    year: 1900,
-    thenImg: 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/95/Piata_Unirii_Timisoara.jpg/640px-Piata_Unirii_Timisoara.jpg',
-    nowImg: 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/95/Piata_Unirii_Timisoara.jpg/640px-Piata_Unirii_Timisoara.jpg',
-    en: {
-      name: 'Union Square',
-      era: 'Early 1900s',
-      text: 'A baroque square from the Habsburg era, framed by the Roman Catholic Dome and the Serbian Orthodox Cathedral. Scan it in the app to see earlier versions of the square.',
-    },
-    ro: {
-      name: 'Piața Unirii',
-      era: 'Începutul secolului XX',
-      text: 'O piață barocă din perioada habsburgică, înconjurată de Domul Romano-Catolic și de Catedrala Ortodoxă Sârbă. Scaneaz-o în aplicație ca să vezi versiuni mai vechi ale pieței.',
-    },
-  },
-  { id: 'p3', live: false, en: { name: 'Liberty Square' }, ro: { name: 'Piața Libertății' } },
-  { id: 'p4', live: false, en: { name: 'Metropolitan Cathedral' }, ro: { name: 'Catedrala Mitropolitană' } },
-  { id: 'p5', live: false, en: { name: 'Bastion' }, ro: { name: 'Bastionul' } },
-];
+// Compile-time guard, no runtime effect: fails the typecheck if any language is missing a
+// key that English has, even a key no screen reads yet.
+type TranslationKeys = keyof (typeof T)['en'];
+export const _everyLanguageIsComplete: { [L in Lang]: Record<TranslationKeys, unknown> } = T;
 
 export const TEAM = [
   { name: 'Radu Daniel-George' },
@@ -234,7 +339,13 @@ export const OFFERS: Offer[] = [
     cost: 120,
     stock: null,
     kind: 'repeatable',
-    title: { en: 'Free coffee', ro: 'Cafea gratuită' },
+    title: {
+      en: 'Free coffee',
+      ro: 'Cafea gratuită',
+      de: 'Gratis-Kaffee',
+      hu: 'Ingyenes kávé',
+      sr: 'Бесплатна кафа',
+    },
   },
   {
     id: 'museum',
@@ -242,7 +353,13 @@ export const OFFERS: Offer[] = [
     cost: 400,
     stock: 25,
     kind: 'active',
-    title: { en: 'Museum day pass', ro: 'Bilet muzeu pe o zi' },
+    title: {
+      en: 'Museum day pass',
+      ro: 'Bilet muzeu pe o zi',
+      de: 'Museums-Tagesticket',
+      hu: 'Egynapos múzeumjegy',
+      sr: 'Дневна музејска карта',
+    },
   },
   {
     id: 'tram',
@@ -250,6 +367,12 @@ export const OFFERS: Offer[] = [
     cost: 2000,
     stock: 0,
     kind: 'active',
-    title: { en: 'Monthly tram pass', ro: 'Abonament tramvai lunar' },
+    title: {
+      en: 'Monthly tram pass',
+      ro: 'Abonament tramvai lunar',
+      de: 'Straßenbahn-Monatskarte',
+      hu: 'Havi villamosbérlet',
+      sr: 'Месечна карта за трамвај',
+    },
   },
 ];

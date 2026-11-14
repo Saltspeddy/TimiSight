@@ -1,8 +1,9 @@
-import { Image } from 'expo-image';
-import { router } from 'expo-router';
+import { router, useFocusEffect } from 'expo-router';
+import { useCallback, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { FlowerIcon, tint } from '@/components/flower-icon';
 import { evaluateBadges } from '@/constants/badges';
 import { BORDER, Brand, hardShadow } from '@/constants/brand';
 import { useCollection } from '@/constants/collection';
@@ -10,22 +11,11 @@ import { useFlowers } from '@/hooks/use-flowers';
 import { useLang } from '@/hooks/use-lang';
 
 const TXT = {
-  en: {
-    title: 'Garden',
-    flowers: 'flowers',
-    find: 'Find it in the city',
-    badges: 'Badges',
-    simTitle: 'Simulate a scan (demo)',
-    simHint: 'Stands in for tapping a physical NFC tag. Opens the flower as if scanned.',
-  },
-  ro: {
-    title: 'Grădina',
-    flowers: 'flori',
-    find: 'Găsește-o în oraș',
-    badges: 'Insigne',
-    simTitle: 'Simulează o scanare (demo)',
-    simHint: 'Înlocuiește atingerea unei etichete NFC fizice. Deschide floarea ca și cum ar fi scanată.',
-  },
+  en: { title: 'Garden', flowers: 'flowers', find: 'Find it in the city', badges: 'Badges' },
+  ro: { title: 'Grădina', flowers: 'flori', find: 'Găsește-o în oraș', badges: 'Insigne' },
+  de: { title: 'Garten', flowers: 'Blumen', find: 'Finde sie in der Stadt', badges: 'Abzeichen' },
+  hu: { title: 'Kert', flowers: 'virág', find: 'Keresd meg a városban', badges: 'Jelvények' },
+  sr: { title: 'Врт', flowers: 'цветова', find: 'Пронађи га у граду', badges: 'Значке' },
 };
 
 export default function GardenScreen() {
@@ -50,14 +40,14 @@ export default function GardenScreen() {
           owned.includes(f.id) ? (
             <Pressable key={f.id} onPress={() => router.push(`/place/${f.id}`)} accessibilityRole="button"
               accessibilityLabel={f.name[lang]} style={({ pressed }) => [s.card, pressed && s.pressed]}>
-              <View style={[s.thumb, { backgroundColor: f.color }]}>
-                {f.image ? <Image source={f.image} style={StyleSheet.absoluteFill} contentFit="contain" /> : null}
+              <View style={[s.thumb, { backgroundColor: tint(f.color) }]}>
+                <FlowerIcon flower={f} />
               </View>
               <Text style={s.name} numberOfLines={2}>{f.name[lang]}</Text>
             </Pressable>
           ) : (
             <View key={f.id} style={[s.card, s.locked]}>
-              <Text style={s.q}>?</Text>
+              <FlowerIcon flower={f} locked size={84} />
               <Text style={s.lockText}>{x.find}</Text>
             </View>
           ),
@@ -114,7 +104,6 @@ const s = StyleSheet.create({
   thumb: { aspectRatio: 1, borderRadius: 12, borderWidth: 2, borderColor: Brand.ink, overflow: 'hidden' },
   name: { fontSize: 16, fontWeight: '800', color: Brand.ink },
   locked: { borderStyle: 'dashed', alignItems: 'center', justifyContent: 'center', minHeight: 170, shadowOpacity: 0, elevation: 0, backgroundColor: 'transparent' },
-  q: { fontSize: 44, fontWeight: '800', color: Brand.inkFaint },
   lockText: { fontSize: 14, fontStyle: 'italic', color: Brand.inkFaint, textAlign: 'center' },
   badge: { width: '31%', alignItems: 'center', gap: 4, borderWidth: 2, borderColor: Brand.ink, borderRadius: 14, padding: 10 },
   badgeOn: { backgroundColor: Brand.yellow },

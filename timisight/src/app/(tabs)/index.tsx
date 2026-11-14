@@ -3,7 +3,7 @@ import { router } from 'expo-router';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { LangToggle } from '@/components/lang-toggle';
+import { LanguagePicker } from '@/components/language-picker';
 import { BORDER, Brand, hardShadow } from '@/constants/brand';
 import { TEAM } from '@/constants/site-data';
 import { useLang } from '@/hooks/use-lang';
@@ -27,7 +27,7 @@ export default function HomeScreen() {
             accessibilityLabel={t.appName}
           />
           <View style={[styles.langOverlay, { top: insets.top + 8 }]}>
-            <LangToggle />
+            <LanguagePicker />
           </View>
         </View>
 
@@ -39,9 +39,11 @@ export default function HomeScreen() {
           {/* Stamp */}
           <View style={styles.stampWrap}>
             <View style={styles.stamp}>
-              <Text style={styles.stampCity}>Timișoara</Text>
-              <Text style={styles.stampYear}>1989</Text>
-              <Text style={styles.stampCity}>2026</Text>
+              <Text style={styles.stampCity}>{t.stamp[0]}</Text>
+              <Text style={styles.stampYear} numberOfLines={1} adjustsFontSizeToFit>
+                {t.stamp[1]}
+              </Text>
+              <Text style={styles.stampCity}>{t.stamp[2]}</Text>
             </View>
           </View>
 
@@ -72,13 +74,12 @@ export default function HomeScreen() {
           <Text style={styles.h2}>{t.teamTitle}</Text>
           <Text style={styles.sub}>{t.teamText}</Text>
           <View style={styles.team}>
-            {TEAM.map((m, i) => (
+            {TEAM.map((m) => (
               <View key={m.name} style={styles.member}>
                 <View style={styles.avatar}>
                   <Text style={styles.avatarText}>{m.name[0]}</Text>
                 </View>
                 <Text style={styles.memberName}>{m.name}</Text>
-                <Text style={styles.memberRole}>{t.roles[i]}</Text>
               </View>
             ))}
           </View>
@@ -122,7 +123,7 @@ const styles = StyleSheet.create({
     transform: [{ rotate: '-12deg' }],
   },
   stampCity: { color: Brand.orange, fontWeight: '800', fontSize: 16 },
-  stampYear: { color: Brand.orange, fontWeight: '800', fontSize: 56, lineHeight: 60 },
+  stampYear: { color: Brand.orange, fontWeight: '800', fontSize: 44, lineHeight: 50, maxWidth: 140, textAlign: 'center' },
 
   btn: {
     alignSelf: 'flex-start',
@@ -169,7 +170,6 @@ const styles = StyleSheet.create({
   },
   avatarText: { color: '#fff', fontSize: 30, fontWeight: '800' },
   memberName: { fontSize: 15, fontWeight: '800', color: Brand.ink },
-  memberRole: { fontSize: 14, color: Brand.inkFaint, fontStyle: 'italic' },
 
   footer: {
     borderTopWidth: BORDER,
