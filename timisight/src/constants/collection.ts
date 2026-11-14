@@ -148,22 +148,43 @@ export function resetCollectionForUserChange(): void {
  * harmless. Each call is isolated in try/catch so a quest write can NEVER break the scan UX.
  * This keeps checkIn's signature/behaviour unchanged and collection.ts free of quest-catalogue
  * knowledge (the caller supplies the relevant pathIds).
+ *
+ * The completion bonus is granted SERVER-SIDE inside complete_path_if_done (via
+ * award_points_a0), so checkIn's optimistic total never sees it. When a path actually
+ * completes and awards a bonus, we reconcile the local store from the DB (reloadCollection)
+ * so every screen reading the store — Account balance + lifetime, Shop balance — reflects
+ * the new total immediately, not just the leaderboard (which re-reads the DB on its own).
+ * Returns true when the store was reconciled, so the caller knows points changed.
  */
-export async function activateAndComplete(flowerId: string, pathIds: string[]): Promise<void> {
+export async function activateAndComplete(flowerId: string, pathIds: string[]): Promise<boolean> {
   try {
     const { error } = await supabase.rpc('activate_paths_for_flower', { p_flower: flowerId });
     if (error) throw error;
   } catch (e) {
     console.warn('[collection] activate_paths_for_flower failed:', e);
   }
+
+  let awardedBonus = false;
   for (const pathId of pathIds) {
     try {
-      const { error } = await supabase.rpc('complete_path_if_done', { p_path: pathId });
+      const { data, error } = await supabase.rpc('complete_path_if_done', { p_path: pathId });
       if (error) throw error;
+      // complete_path_if_done returns { completed, already, awarded }. A positive `awarded`
+      // (or completed=true with a bonus) means the DB balance changed under us.
+      const r = (data ?? {}) as Record<string, unknown>;
+      if ((typeof r.awarded === 'number' && r.awarded > 0) || r.completed === true) {
+        awardedBonus = true;
+      }
     } catch (e) {
       console.warn('[collection] complete_path_if_done failed:', e);
     }
   }
+
+  // Reconcile balance + lifetime from the DB once, only if a bonus landed.
+  if (awardedBonus) {
+    await reloadCollection();
+  }
+  return awardedBonus;
 }
 
 /**

@@ -1,15 +1,54 @@
+import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { router, useFocusEffect } from 'expo-router';
-import { useCallback } from 'react';
+import { useCallback, useState, type ReactNode } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import Animated, { FadeIn } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { Collapsible } from '@/components/ui/collapsible';
 import { BORDER, Brand, hardShadow } from '@/constants/brand';
 import { useCollection } from '@/constants/collection';
 import type { Lang } from '@/constants/site-data';
 import { useFlowers } from '@/hooks/use-flowers';
 import { useLang } from '@/hooks/use-lang';
 import { refreshQuests, useQuests, type PathQuest } from '@/hooks/use-quests';
+
+/**
+ * On-theme collapsible section, styled with the app's neo-brutalist Brand tokens
+ * (paper surface, ink border, hard shadow) instead of the generic dark-themed
+ * `components/ui/collapsible`. Kept local to this screen so it can match the house
+ * style exactly; the header is a comfortable tap target.
+ */
+function Section({
+  title,
+  defaultOpen = true,
+  children,
+}: {
+  title: string;
+  defaultOpen?: boolean;
+  children: ReactNode;
+}) {
+  const [open, setOpen] = useState(defaultOpen);
+  return (
+    <View style={sx.section}>
+      <Pressable
+        onPress={() => setOpen((v) => !v)}
+        accessibilityRole="button"
+        style={({ pressed }) => [sx.header, pressed && sx.headerPressed]}>
+        <MaterialIcons
+          name={open ? 'keyboard-arrow-down' : 'chevron-right'}
+          size={24}
+          color={Brand.ink}
+        />
+        <Text style={sx.headerTitle}>{title}</Text>
+      </Pressable>
+      {open ? (
+        <Animated.View entering={FadeIn.duration(180)} style={sx.sectionBody}>
+          {children}
+        </Animated.View>
+      ) : null}
+    </View>
+  );
+}
 
 export default function QuestsScreen() {
   const [lang, t] = useLang();
@@ -28,41 +67,48 @@ export default function QuestsScreen() {
   const flowerName = (flowerId: string): string =>
     flowers.find((f) => f.id === flowerId)?.name[lang] ?? flowerId;
 
+  // Only paths the user has actually activated (by discovering the start flower) are shown.
+  // Until then, the section renders a hint prompting discovery of Casa Mühle — not the
+  // catalogue of not-yet-unlocked paths.
+  const activePaths = paths.filter((p) => p.activated);
+
   return (
-    <View style={s.root}>
+    <View style={sx.root}>
       <ScrollView
         contentContainerStyle={{ padding: 20, paddingTop: insets.top + 20, paddingBottom: 100, gap: 16 }}
         showsVerticalScrollIndicator={false}>
-        <Text style={s.h1}>{t.quests.title}</Text>
+        <Text style={sx.h1}>{t.quests.title}</Text>
 
         {/* Daily Quests — on top */}
-        <Collapsible title={t.quests.dailyTitle}>
+        <Section title={t.quests.dailyTitle}>
           {daily ? (
             <Pressable
               onPress={() => router.push(`/f/${daily.flowerId}`)}
               accessibilityRole="button"
-              style={({ pressed }) => [s.card, pressed && s.pressed]}>
-              <View style={[s.dot, { backgroundColor: flowers.find((f) => f.id === daily.flowerId)?.color ?? Brand.blue }]} />
+              style={({ pressed }) => [sx.card, pressed && sx.pressed]}>
+              <View style={[sx.dot, { backgroundColor: flowers.find((f) => f.id === daily.flowerId)?.color ?? Brand.blue }]} />
               <View style={{ flex: 1 }}>
-                <Text style={s.cardName} numberOfLines={1}>{flowerName(daily.flowerId)}</Text>
-                <Text style={s.cardMeta}>
+                <Text style={sx.cardName} numberOfLines={1}>{flowerName(daily.flowerId)}</Text>
+                <Text style={sx.cardMeta}>
                   {daily.collectedToday ? `✓ ${t.quests.dailyDone}` : t.quests.tapToScan}
                 </Text>
               </View>
-              <Text style={s.state}>{daily.collectedToday ? '✓' : '▶'}</Text>
+              <Text style={sx.state}>{daily.collectedToday ? '✓' : '▶'}</Text>
             </Pressable>
           ) : (
-            <Text style={s.empty}>{t.quests.dailyEmpty}</Text>
+            <Text style={sx.empty}>{t.quests.dailyEmpty}</Text>
           )}
-        </Collapsible>
+        </Section>
 
-        {/* Flower Paths — below */}
-        <Collapsible title={t.quests.pathsTitle}>
-          {paths.length === 0 ? (
-            <Text style={s.empty}>{t.quests.pathsEmpty}</Text>
+        {/* Flower Paths — below. Shows a discovery hint until at least one path is activated. */}
+        <Section title={t.quests.pathsTitle}>
+          {activePaths.length === 0 ? (
+            <View style={sx.hintBox}>
+              <Text style={sx.hintText}>{t.quests.pathsHint}</Text>
+            </View>
           ) : (
             <View style={{ gap: 14 }}>
-              {paths.map((path) => (
+              {activePaths.map((path) => (
                 <PathCard
                   key={path.id}
                   path={path}
@@ -78,7 +124,7 @@ export default function QuestsScreen() {
               ))}
             </View>
           )}
-        </Collapsible>
+        </Section>
       </ScrollView>
     </View>
   );
@@ -109,10 +155,10 @@ function PathCard({
   const name = lang === 'ro' ? path.nameRo : path.nameEn;
 
   return (
-    <View style={[s.pathCard, completed && s.pathCardDone]}>
-      <Text style={s.pathName}>{name}</Text>
+    <View style={[sx.pathCard, completed && sx.pathCardDone]}>
+      <Text style={sx.pathName}>{name}</Text>
 
-      <View style={s.stops}>
+      <View style={sx.stops}>
         {path.stops.map((stop) => {
           const have = collectedIds.includes(stop.flowerId);
           return (
@@ -121,24 +167,24 @@ function PathCard({
               onPress={() => router.push(`/f/${stop.flowerId}`)}
               disabled={have}
               accessibilityRole="button"
-              style={({ pressed }) => [s.stopRow, !have && pressed && s.pressed]}>
-              <View style={[s.stopCheck, have && s.stopCheckOn]}>
-                <Text style={[s.stopCheckText, have && s.stopCheckTextOn]}>{have ? '✓' : stop.position}</Text>
+              style={({ pressed }) => [sx.stopRow, !have && pressed && sx.pressed]}>
+              <View style={[sx.stopCheck, have && sx.stopCheckOn]}>
+                <Text style={[sx.stopCheckText, have && sx.stopCheckTextOn]}>{have ? '✓' : stop.position}</Text>
               </View>
-              <Text style={s.stopName} numberOfLines={1}>{flowerName(stop.flowerId)}</Text>
-              {!have ? <Text style={s.stopTap}>{tapLabel}</Text> : null}
+              <Text style={sx.stopName} numberOfLines={1}>{flowerName(stop.flowerId)}</Text>
+              {!have ? <Text style={sx.stopTap}>{tapLabel}</Text> : null}
             </Pressable>
           );
         })}
       </View>
 
-      <View style={s.bonusRow}>
-        <Text style={s.bonusLabel}>{bonusLabel}</Text>
-        <Text style={s.bonusValue}>{path.completionBonus} {pointsLabel}</Text>
+      <View style={sx.bonusRow}>
+        <Text style={sx.bonusLabel}>{bonusLabel}</Text>
+        <Text style={sx.bonusValue}>{path.completionBonus} {pointsLabel}</Text>
       </View>
 
       {completed ? (
-        <Text style={s.pathDone}>
+        <Text style={sx.pathDone}>
           🗺️ {doneLabel}{path.badge ? ` · ${badgeLabel}` : ''}
         </Text>
       ) : null}
@@ -146,10 +192,42 @@ function PathCard({
   );
 }
 
-const s = StyleSheet.create({
+const sx = StyleSheet.create({
   root: { flex: 1, backgroundColor: Brand.paper },
   h1: { fontSize: 32, fontWeight: '800', color: Brand.ink, letterSpacing: -0.5 },
   empty: { fontSize: 14, color: Brand.inkFaint, fontStyle: 'italic' },
+
+  // On-theme collapsible section chrome (replaces the dark generic Collapsible).
+  section: {
+    borderWidth: BORDER,
+    borderColor: Brand.ink,
+    borderRadius: 16,
+    backgroundColor: Brand.paper,
+    overflow: 'hidden',
+    ...hardShadow(4),
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    minHeight: 54,
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+    backgroundColor: Brand.yellow,
+  },
+  headerPressed: { opacity: 0.85 },
+  headerTitle: { fontSize: 18, fontWeight: '800', color: Brand.ink, letterSpacing: -0.3 },
+  sectionBody: { padding: 14, gap: 14 },
+
+  hintBox: {
+    borderWidth: 2,
+    borderColor: Brand.inkFaint,
+    borderStyle: 'dashed',
+    borderRadius: 12,
+    padding: 16,
+    backgroundColor: Brand.white,
+  },
+  hintText: { fontSize: 14, color: Brand.inkSoft, fontStyle: 'italic' },
 
   card: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: Brand.white, borderWidth: 2, borderColor: Brand.ink, borderRadius: 12, padding: 12, ...hardShadow(4) },
   pressed: { transform: [{ translateX: 2 }, { translateY: 2 }], ...hardShadow(2) },
