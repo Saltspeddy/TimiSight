@@ -3,7 +3,7 @@ import { router } from 'expo-router';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { LangToggle } from '@/components/lang-toggle';
+import { LanguagePicker } from '@/components/language-picker';
 import { BORDER, Brand, hardShadow } from '@/constants/brand';
 import { TEAM } from '@/constants/site-data';
 import { useLang } from '@/hooks/use-lang';
@@ -27,7 +27,7 @@ export default function HomeScreen() {
             accessibilityLabel={t.appName}
           />
           <View style={[styles.langOverlay, { top: insets.top + 8 }]}>
-            <LangToggle />
+            <LanguagePicker />
           </View>
         </View>
 

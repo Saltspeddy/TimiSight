@@ -23,7 +23,7 @@ export default function TabsLayout() {
 
       <NativeTabs.Trigger name="places">
         <Label>{t.tabs.places}</Label>
-        <Icon src={<VectorIcon family={MaterialIcons} name="place" />} />
+        <Icon src={<VectorIcon family={MaterialIcons} name="eco" />} />
       </NativeTabs.Trigger>
 
       <NativeTabs.Trigger name="shop">

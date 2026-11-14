@@ -2,7 +2,7 @@ import { Image } from 'expo-image';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { LangToggle } from '@/components/lang-toggle';
+import { LanguagePicker } from '@/components/language-picker';
 import { BORDER, Brand, hardShadow } from '@/constants/brand';
 import { LEADERBOARD, ME } from '@/constants/site-data';
 import { useAuth } from '@/hooks/auth';
@@ -81,7 +81,7 @@ export default function AccountScreen() {
           </View>
           <View style={[styles.row, styles.rowLast]}>
             <Text style={styles.dt}>{t.accountLanguage}</Text>
-            <LangToggle />
+            <LanguagePicker />
           </View>
         </View>
       </ScrollView>
