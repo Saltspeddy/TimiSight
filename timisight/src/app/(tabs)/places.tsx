@@ -7,7 +7,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { evaluateBadges } from '@/constants/badges';
 import { BORDER, Brand, hardShadow } from '@/constants/brand';
 import { collectedIds, totalPoints } from '@/constants/collection';
-import { FLOWERS } from '@/constants/flowers';
+import { useFlowers } from '@/hooks/use-flowers';
 import { useLang } from '@/hooks/use-lang';
 
 const TXT = {
@@ -21,17 +21,18 @@ export default function GardenScreen() {
   const insets = useSafeAreaInsets();
   const [, refresh] = useState(0);
   useFocusEffect(useCallback(() => { refresh((n) => n + 1); }, [])); // re-read when the tab is shown
+  const flowers = useFlowers();
   const owned = collectedIds();
-  const badges = evaluateBadges(owned, totalPoints());
+  const badges = evaluateBadges(owned, totalPoints(), flowers.length);
 
   return (
     <ScrollView style={{ backgroundColor: Brand.paper }}
       contentContainerStyle={{ padding: 20, paddingTop: insets.top + 24, paddingBottom: 120, gap: 16 }}>
       <Text style={s.h1}>{x.title}</Text>
-      <Text style={s.count}>{owned.length} / {FLOWERS.length} {x.flowers}</Text>
+      <Text style={s.count}>{owned.length} / {flowers.length} {x.flowers}</Text>
 
       <View style={s.grid}>
-        {FLOWERS.map((f) =>
+        {flowers.map((f) =>
           owned.includes(f.id) ? (
             <Pressable key={f.id} onPress={() => router.push(`/place/${f.id}`)} accessibilityRole="button"
               accessibilityLabel={f.name[lang]} style={({ pressed }) => [s.card, pressed && s.pressed]}>
@@ -68,14 +69,16 @@ const s = StyleSheet.create({
   count: { fontSize: 16, fontStyle: 'italic', color: Brand.inkSoft },
   h2: { fontSize: 22, fontWeight: '800', color: Brand.ink, marginTop: 12 },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
-  card: { flexBasis: '47%', flexGrow: 1, backgroundColor: Brand.white, borderWidth: BORDER, borderColor: Brand.ink, borderRadius: 16, padding: 10, gap: 8, ...hardShadow(4) },
+  // Fixed ~half-width so cards tile two-per-row. No flexGrow: a lone card on the
+  // last row keeps its size instead of stretching to fill the whole row.
+  card: { width: '47%', backgroundColor: Brand.white, borderWidth: BORDER, borderColor: Brand.ink, borderRadius: 16, padding: 10, gap: 8, ...hardShadow(4) },
   pressed: { transform: [{ translateX: 2 }, { translateY: 2 }], ...hardShadow(2) },
   thumb: { aspectRatio: 1, borderRadius: 12, borderWidth: 2, borderColor: Brand.ink, overflow: 'hidden' },
   name: { fontSize: 16, fontWeight: '800', color: Brand.ink },
   locked: { borderStyle: 'dashed', alignItems: 'center', justifyContent: 'center', minHeight: 170, shadowOpacity: 0, elevation: 0, backgroundColor: 'transparent' },
   q: { fontSize: 44, fontWeight: '800', color: Brand.inkFaint },
   lockText: { fontSize: 14, fontStyle: 'italic', color: Brand.inkFaint, textAlign: 'center' },
-  badge: { flexBasis: '30%', flexGrow: 1, alignItems: 'center', gap: 4, borderWidth: 2, borderColor: Brand.ink, borderRadius: 14, padding: 10 },
+  badge: { width: '31%', alignItems: 'center', gap: 4, borderWidth: 2, borderColor: Brand.ink, borderRadius: 14, padding: 10 },
   badgeOn: { backgroundColor: Brand.yellow },
   badgeOff: { backgroundColor: Brand.white, opacity: 0.6 },
   badgeEmoji: { fontSize: 30 },

@@ -8,8 +8,8 @@ import { FlowerStory } from '@/components/flower-story';
 
 import { BORDER, Brand, hardShadow } from '@/constants/brand';
 import { checkIn, collectedIds, type CheckInResult } from '@/constants/collection';
-import { FLOWERS } from '@/constants/flowers';
 import type { Lang } from '@/constants/site-data';
+import { useFlowers } from '@/hooks/use-flowers';
 import { useLang } from '@/hooks/use-lang';
 
 const TXT = {
@@ -36,7 +36,8 @@ export function FlowerView({ id, scanned = false }: { id: string; scanned?: bool
   const [lang, t] = useLang();
   const x = TXT[lang];
   const insets = useSafeAreaInsets();
-  const flower = FLOWERS.find((f) => f.id === id);
+  const flowers = useFlowers();
+  const flower = flowers.find((f) => f.id === id);
   const [result, setResult] = useState<CheckInResult | null>(null);
   const [story, setStory] = useState(false);
   const ran = useRef(false);
@@ -45,8 +46,12 @@ export function FlowerView({ id, scanned = false }: { id: string; scanned?: bool
   useEffect(() => {
     if (!scanned || !flower || ran.current) return;
     ran.current = true;
+    // One-time check-in when the screen is opened from a scanned tag. The
+    // `ran` guard ensures this runs exactly once, so setting state here does
+    // not cause a render loop.
     const res = checkIn(flower);
     setResult(res);
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (!res.already) setStory(true);
   }, [scanned, flower]);
 
@@ -63,7 +68,7 @@ export function FlowerView({ id, scanned = false }: { id: string; scanned?: bool
 
   const other: Lang = lang === 'en' ? 'ro' : 'en';
   const owned = collectedIds()
-    .map((fid) => FLOWERS.find((f) => f.id === fid))
+    .map((fid) => flowers.find((f) => f.id === fid))
     .filter((f) => !!f);
 
   return (
@@ -88,6 +93,7 @@ export function FlowerView({ id, scanned = false }: { id: string; scanned?: bool
         <Animated.View entering={FadeInDown.delay(250)}>
           <Text style={s.h1}>{flower.name[lang]}</Text>
           <Text style={s.sub}>{flower.name[other]}</Text>
+          {flower.latinName ? <Text style={s.latin}>{flower.latinName}</Text> : null}
         </Animated.View>
 
         <Pressable onPress={() => setStory(true)} style={s.watch} accessibilityRole="button">
@@ -157,6 +163,8 @@ export function FlowerView({ id, scanned = false }: { id: string; scanned?: bool
           <Text style={s.rankText}>{x.ranking}</Text>
         </Pressable>
       </ScrollView>
+
+      <FlowerStory flower={flower} lang={lang} visible={story} onClose={() => setStory(false)} />
     </View>
   );
 }
@@ -171,6 +179,7 @@ const s = StyleSheet.create({
   placeholder: { color: Brand.inkFaint, fontWeight: '700' },
   h1: { fontSize: 32, lineHeight: 36, fontWeight: '800', color: Brand.ink, letterSpacing: -0.5, marginTop: 20 },
   sub: { fontSize: 19, fontStyle: 'italic', color: Brand.inkFaint, marginTop: 2 },
+  latin: { fontSize: 15, fontStyle: 'italic', color: Brand.inkFaint, marginTop: 2, opacity: 0.8 },
   card: { flexDirection: 'row', alignItems: 'center', gap: 14, borderWidth: BORDER, borderColor: Brand.ink, borderRadius: 14, padding: 14, marginTop: 20, ...hardShadow(4) },
   cardNew: { backgroundColor: Brand.yellow },
   cardAlready: { backgroundColor: Brand.white },
@@ -181,6 +190,8 @@ const s = StyleSheet.create({
   hint: { color: Brand.inkFaint, fontSize: 14, marginTop: 14 },
   sim: { alignSelf: 'flex-start', marginTop: 10, borderWidth: 2, borderColor: Brand.ink, borderStyle: 'dashed', borderRadius: 10, paddingVertical: 8, paddingHorizontal: 12 },
   simText: { color: Brand.ink, fontWeight: '800', fontSize: 14 },
+  watch: { alignSelf: 'flex-start', marginTop: 14, backgroundColor: Brand.orange, borderWidth: 2, borderColor: Brand.ink, borderRadius: 10, paddingVertical: 8, paddingHorizontal: 14 },
+  watchText: { color: Brand.ink, fontWeight: '800' },
   h2: { fontSize: 22, fontWeight: '800', color: Brand.ink, marginTop: 28, marginBottom: 10 },
   body: { fontSize: 17, lineHeight: 26, color: Brand.inkSoft },
   placeName: { fontSize: 17, fontWeight: '800', color: Brand.ink, marginBottom: 4 },

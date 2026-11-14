@@ -1,18 +1,34 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useSyncExternalStore } from 'react';
 
 import { MY_POINTS, OFFERS, type Offer } from '@/constants/site-data';
 
-// Persistent points + perks store for the shop.
+// Points + perks store for the shop.
 //
-// This is the SINGLE seam between the UI and "where perks live". Today it reads and
-// writes on-device via AsyncStorage so redemptions and the balance survive the app
-// closing and reopening. When a real account/points backend exists, swap the
-// `load`/`persist` bodies (and the mutators) for API calls — the hook's shape and the
-// shop UI stay the same.
+// This is the SINGLE seam between the UI and "where perks live". When a real
+// account/points backend exists, swap the `load`/`persist` bodies (and the
+// mutators) for API calls — the hook's shape and the shop UI stay the same.
 //
-// Mirrors the module-level + useSyncExternalStore pattern of use-lang.ts so the state
-// is shared across screens without pulling in a state library.
+// STORAGE: this used @react-native-async-storage/async-storage, but that is a
+// NATIVE module not bundled in Expo Go — importing it crashes the app in Expo
+// Go ("[runtime not ready]: Cannot read property 'EventEmitter' of undefined").
+// To keep the app runnable in Expo Go (no custom dev build needed), persistence
+// is a no-op in-memory shim for now: state is shared across screens for the
+// session but does not survive a restart. To restore cross-restart persistence,
+// make a dev build (npx expo run:android) and swap `storage` below back to:
+//   import AsyncStorage from '@react-native-async-storage/async-storage';
+//   const storage = AsyncStorage;
+//
+// Mirrors the module-level + useSyncExternalStore pattern of use-lang.ts so the
+// state is shared across screens without pulling in a state library.
+
+// In-memory, Expo-Go-safe stand-in for AsyncStorage's async get/set.
+const mem = new Map<string, string>();
+const storage = {
+  getItem: async (k: string): Promise<string | null> => mem.get(k) ?? null,
+  setItem: async (k: string, v: string): Promise<void> => {
+    mem.set(k, v);
+  },
+};
 
 const STORAGE_KEY = 'timisight.perks.v1';
 
@@ -56,7 +72,7 @@ function setState(next: PerksState) {
 
 async function persist(next: PerksState) {
   try {
-    await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+    await storage.setItem(STORAGE_KEY, JSON.stringify(next));
   } catch {
     // Non-fatal in a demo: if storage write fails the in-memory state is still correct
     // for this session; it just won't survive a restart.
@@ -72,7 +88,7 @@ export async function hydratePerks(): Promise<void> {
   if (hydrated) return;
   hydrated = true;
   try {
-    const raw = await AsyncStorage.getItem(STORAGE_KEY);
+    const raw = await storage.getItem(STORAGE_KEY);
     if (!raw) return;
     const parsed = JSON.parse(raw) as Partial<PerksState>;
     state = {
