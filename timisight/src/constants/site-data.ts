@@ -204,10 +204,10 @@ export const ME = {
   lifetime: 1020,
 };
 
-// NOTE: the player's spendable balance is NO LONGER sourced here. It comes from the
-// unified points ledger in Supabase (see src/constants/collection.ts — totalPoints()),
-// so earned and spendable points are the same number. `ME`/`LEADERBOARD` above remain
-// demo data only for the leaderboard-rank placeholder on the account screen.
+// NOTE: points, balance AND the leaderboard are now DB-backed (see
+// src/constants/collection.ts and src/hooks/use-leaderboard.ts). `LEADERBOARD` here is
+// unused leftover demo data; `ME.name` is still used only as a display-name fallback on
+// the account screen when the Auth0 profile has no name/email.
 
 // A perk is either:
 //   'repeatable' — claimable on demand any number of times (e.g. a free coffee);

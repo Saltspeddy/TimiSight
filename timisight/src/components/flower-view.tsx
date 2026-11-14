@@ -14,13 +14,13 @@ import { useFlowers } from '@/hooks/use-flowers';
 import { useLang } from '@/hooks/use-lang';
 
 const TXT = {
-  en: { watch: '▶ Watch the story', checked: 'Checked in', already: 'Already in your bouquet', alreadySub: 'Each flower pays points once.',
+  en: { watch: '▶ Watch the story', checked: 'Checked in', already: 'You already have it in your garden', alreadySub: 'Each flower pays points once.',
     total: 'Total', pts: 'pts', tap: 'Tap this flower’s NFC tag to check in and earn points.', sim: 'Simulate NFC tap (demo)',
-    flower: 'The flower', place: 'The place', rewards: 'Rewards nearby', bouquet: 'Your bouquet',
+    flower: 'The flower', place: 'The place', rewards: 'Rewards nearby', bouquet: 'Your garden',
     ranking: 'Garden ranking', notFound: 'Flower not found' },
-  ro: {watch: '▶ Watch the story', checked: 'Check-in făcut', already: 'Deja în buchetul tău', alreadySub: 'Fiecare floare oferă puncte o singură dată.',
+  ro: {watch: '▶ Watch the story', checked: 'Check-in făcut', already: 'O ai deja în grădina ta', alreadySub: 'Fiecare floare oferă puncte o singură dată.',
     total: 'Total', pts: 'puncte', tap: 'Atinge eticheta NFC a acestei flori ca să faci check-in și să câștigi puncte.', sim: 'Simulează atingerea NFC (demo)',
-    flower: 'Floarea', place: 'Locul', rewards: 'Recompense în apropiere', bouquet: 'Buchetul tău',
+    flower: 'Floarea', place: 'Locul', rewards: 'Recompense în apropiere', bouquet: 'Grădina ta',
     ranking: 'Clasamentul grădinii', notFound: 'Floarea nu a fost găsită' },
 };
 

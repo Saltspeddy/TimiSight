@@ -264,10 +264,18 @@ end $$;
 revoke execute on function award_points_a0(text, int, text) from public;
 
 -- ---------------------------------------------------------------------------
--- leaderboard_a0: public ranking by lifetime points earned. LEFT JOIN so a
+-- leaderboard_a0: PUBLIC ranking by lifetime points earned. LEFT JOIN so a
 -- ledger-only user (no profile row yet) still ranks, with an 'Explorer' fallback.
+--
+-- SECURITY DEFINER (security_invoker = false): a leaderboard is public, so the view
+-- must aggregate EVERY user's totals regardless of who queries it. If it ran under the
+-- caller's RLS (security_invoker = true), the "read own points" policy on
+-- point_transactions_a0 would filter the aggregation to only the caller's rows and the
+-- board would show just the current user. The view exposes only non-sensitive aggregated
+-- data (display name + lifetime total), never individual ledger rows, so no private data
+-- leaks; the ledger itself stays read-own-only for all other query paths.
 -- ---------------------------------------------------------------------------
-create or replace view leaderboard_a0 with (security_invoker = true) as
+create or replace view leaderboard_a0 with (security_invoker = false) as
 select p.auth0_sub,
        coalesce(pr.display_name, 'Explorer') as display_name,
        coalesce(sum(p.amount) filter (where p.amount > 0), 0) as lifetime
