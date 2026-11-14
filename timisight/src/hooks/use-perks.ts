@@ -1,54 +1,39 @@
 import { useSyncExternalStore } from 'react';
 
-import { MY_POINTS, OFFERS, type Offer } from '@/constants/site-data';
+import type { Offer } from '@/constants/site-data';
+import {
+  reloadCollection,
+  totalPoints,
+  useCollection,
+} from '@/constants/collection';
+import { refreshOffers } from '@/hooks/use-offers';
+import { supabase } from '@/lib/supabase';
 
 // Points + perks store for the shop.
 //
-// This is the SINGLE seam between the UI and "where perks live". When a real
-// account/points backend exists, swap the `load`/`persist` bodies (and the
-// mutators) for API calls — the hook's shape and the shop UI stay the same.
+// POINTS ARE UNIFIED: the spendable balance is the SAME ledger as the points earned by
+// scanning flowers. There is no separate balance counter — `balance` is read from the
+// collection store's `totalPoints()` (which reflects the DB `user_points_a0` view). This
+// is what makes "earned == spendable" true rather than cosmetic.
 //
-// STORAGE: this used @react-native-async-storage/async-storage, but that is a
-// NATIVE module not bundled in Expo Go — importing it crashes the app in Expo
-// Go ("[runtime not ready]: Cannot read property 'EventEmitter' of undefined").
-// To keep the app runnable in Expo Go (no custom dev build needed), persistence
-// is a no-op in-memory shim for now: state is shared across screens for the
-// session but does not survive a restart. To restore cross-restart persistence,
-// make a dev build (npx expo run:android) and swap `storage` below back to:
-//   import AsyncStorage from '@react-native-async-storage/async-storage';
-//   const storage = AsyncStorage;
+// Redemption goes through the `redeem_offer_a0` RPC (atomic, double-spend-safe, decrements
+// real stock). The returned one-time code is discarded this milestone (no code UI yet).
 //
-// Mirrors the module-level + useSyncExternalStore pattern of use-lang.ts so the
-// state is shared across screens without pulling in a state library.
+// The per-offer `active` passes and `claims` counts remain CLIENT-SIDE presentation state
+// for the demo (they drive the "Active perks" banner). Only the points are DB-backed; the
+// DB does write a redemptions_a0 row per redeem, but we do not read those back to
+// reconstruct the banner here.
 
-// In-memory, Expo-Go-safe stand-in for AsyncStorage's async get/set.
-const mem = new Map<string, string>();
-const storage = {
-  getItem: async (k: string): Promise<string | null> => mem.get(k) ?? null,
-  setItem: async (k: string, v: string): Promise<void> => {
-    mem.set(k, v);
-  },
-};
-
-const STORAGE_KEY = 'timisight.perks.v1';
+export type RedeemResult = { ok: true; code: string } | { ok: false; error: string };
 
 export type PerksState = {
-  /** Current spendable points balance. */
-  balance: number;
-  /** Ids of `kind: 'active'` offers the user currently holds active. */
+  /** Ids of `kind: 'active'` offers the user currently holds active (client-side). */
   active: string[];
-  /** Per-offer claim counts for `kind: 'repeatable'` offers. */
+  /** Per-offer claim counts for `kind: 'repeatable'` offers (client-side). */
   claims: Record<string, number>;
 };
 
-const defaultState: PerksState = {
-  balance: MY_POINTS,
-  active: [],
-  claims: {},
-};
-
-let state: PerksState = defaultState;
-let hydrated = false;
+let state: PerksState = { active: [], claims: {} };
 const listeners = new Set<() => void>();
 
 function emit() {
@@ -57,7 +42,9 @@ function emit() {
 
 function subscribe(cb: () => void) {
   listeners.add(cb);
-  return () => listeners.delete(cb);
+  return () => {
+    listeners.delete(cb);
+  };
 }
 
 function getSnapshot(): PerksState {
@@ -67,48 +54,11 @@ function getSnapshot(): PerksState {
 function setState(next: PerksState) {
   state = next;
   emit();
-  void persist(next);
-}
-
-async function persist(next: PerksState) {
-  try {
-    await storage.setItem(STORAGE_KEY, JSON.stringify(next));
-  } catch {
-    // Non-fatal in a demo: if storage write fails the in-memory state is still correct
-    // for this session; it just won't survive a restart.
-  }
-}
-
-/**
- * Load persisted perks state from disk once, on first mount. Safe to call repeatedly;
- * it only hydrates the first time. Returns nothing — subscribers re-render via the
- * store when hydration completes.
- */
-export async function hydratePerks(): Promise<void> {
-  if (hydrated) return;
-  hydrated = true;
-  try {
-    const raw = await storage.getItem(STORAGE_KEY);
-    if (!raw) return;
-    const parsed = JSON.parse(raw) as Partial<PerksState>;
-    state = {
-      balance: typeof parsed.balance === 'number' ? parsed.balance : defaultState.balance,
-      active: Array.isArray(parsed.active) ? parsed.active : [],
-      claims: parsed.claims && typeof parsed.claims === 'object' ? parsed.claims : {},
-    };
-    emit();
-  } catch {
-    // Corrupt/unreadable storage: fall back to defaults already in `state`.
-  }
-}
-
-function offerById(id: string): Offer | undefined {
-  return OFFERS.find((o) => o.id === id);
 }
 
 /** Can the user afford, and is it valid to redeem/claim, this offer right now? */
-export function canRedeem(offer: Offer, s: PerksState): boolean {
-  if (s.balance < offer.cost) return false;
+export function canRedeem(offer: Offer, balance: number, s: PerksState): boolean {
+  if (balance < offer.cost) return false;
   const soldOut = offer.stock !== null && offer.stock <= 0;
   if (soldOut) return false;
   // An already-active pass cannot be redeemed again (deactivate first).
@@ -116,46 +66,71 @@ export function canRedeem(offer: Offer, s: PerksState): boolean {
   return true;
 }
 
+/** Map a redeem RPC error message to an i18n key the shop already has copy for. */
+function mapRedeemError(message: string | undefined): string {
+  switch (message) {
+    case 'not enough points':
+      return 'notEnough';
+    case 'sold out':
+      return 'soldOut';
+    default:
+      // 'offer not available', 'not signed in', or anything unexpected.
+      return 'generic';
+  }
+}
+
 /**
- * Redeem an `active` pass: spend its cost once and mark it active. No-op if it is
- * already active or unaffordable.
+ * Spend points for an `active` pass via the DB. On success marks it active locally and
+ * refreshes the balance + stock. `offerId` is the DB offer UUID (from use-offers.ts).
  */
-export function redeemActive(id: string) {
-  const offer = offerById(id);
-  if (!offer || offer.kind !== 'active') return;
-  if (!canRedeem(offer, state)) return;
+export async function redeemActive(offer: Offer): Promise<RedeemResult> {
+  if (offer.kind !== 'active') return { ok: false, error: 'generic' };
+  const { data, error } = await supabase.rpc('redeem_offer_a0', { p_offer: offer.id });
+  if (error) {
+    console.warn('[perks] redeemActive failed:', error.message);
+    return { ok: false, error: mapRedeemError(error.message) };
+  }
+  setState({ ...state, active: [...state.active, offer.id] });
+  await Promise.all([reloadCollection(), refreshOffers()]);
+  return { ok: true, code: String(data ?? '') };
+}
+
+/**
+ * Claim a `repeatable` offer via the DB. On success bumps the local claim count and
+ * refreshes the balance + stock.
+ */
+export async function claimRepeatable(offer: Offer): Promise<RedeemResult> {
+  if (offer.kind !== 'repeatable') return { ok: false, error: 'generic' };
+  const { data, error } = await supabase.rpc('redeem_offer_a0', { p_offer: offer.id });
+  if (error) {
+    console.warn('[perks] claimRepeatable failed:', error.message);
+    return { ok: false, error: mapRedeemError(error.message) };
+  }
   setState({
     ...state,
-    balance: state.balance - offer.cost,
-    active: [...state.active, id],
+    claims: { ...state.claims, [offer.id]: (state.claims[offer.id] ?? 0) + 1 },
   });
+  await Promise.all([reloadCollection(), refreshOffers()]);
+  return { ok: true, code: String(data ?? '') };
 }
 
 /**
  * Deactivate an active pass so it returns to the catalogue as redeemable again.
- * Does NOT refund points (the points were spent) — flip this if product wants refunds.
+ * Client-side only; does NOT refund points (they were spent in the ledger).
  */
 export function deactivate(id: string) {
   if (!state.active.includes(id)) return;
   setState({ ...state, active: state.active.filter((a) => a !== id) });
 }
 
-/**
- * Claim a `repeatable` offer (e.g. a free coffee): spend its cost and bump its claim
- * count. Can be done any number of times while the balance allows.
- */
-export function claimRepeatable(id: string) {
-  const offer = offerById(id);
-  if (!offer || offer.kind !== 'repeatable') return;
-  if (!canRedeem(offer, state)) return;
-  setState({
-    ...state,
-    balance: state.balance - offer.cost,
-    claims: { ...state.claims, [id]: (state.claims[id] ?? 0) + 1 },
-  });
-}
-
-/** Read-only subscription to the perks store. */
+/** Read-only subscription to the client-side perks presentation state. */
 export function usePerks(): PerksState {
   return useSyncExternalStore(subscribe, getSnapshot, getSnapshot);
+}
+
+/** The unified spendable balance (same ledger as earned points). */
+export function usePointsBalance(): number {
+  // Subscribe to the collection store so the balance re-renders on change.
+  useCollection();
+  return totalPoints();
 }

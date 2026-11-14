@@ -1,29 +1,43 @@
 import { Image } from 'expo-image';
-import { router, useFocusEffect } from 'expo-router';
-import { useCallback, useState } from 'react';
+import { router } from 'expo-router';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { evaluateBadges } from '@/constants/badges';
 import { BORDER, Brand, hardShadow } from '@/constants/brand';
-import { collectedIds, totalPoints } from '@/constants/collection';
+import { useCollection } from '@/constants/collection';
 import { useFlowers } from '@/hooks/use-flowers';
 import { useLang } from '@/hooks/use-lang';
 
 const TXT = {
-  en: { title: 'Garden', flowers: 'flowers', find: 'Find it in the city', badges: 'Badges' },
-  ro: { title: 'Grădina', flowers: 'flori', find: 'Găsește-o în oraș', badges: 'Insigne' },
+  en: {
+    title: 'Garden',
+    flowers: 'flowers',
+    find: 'Find it in the city',
+    badges: 'Badges',
+    simTitle: 'Simulate a scan (demo)',
+    simHint: 'Stands in for tapping a physical NFC tag. Opens the flower as if scanned.',
+  },
+  ro: {
+    title: 'Grădina',
+    flowers: 'flori',
+    find: 'Găsește-o în oraș',
+    badges: 'Insigne',
+    simTitle: 'Simulează o scanare (demo)',
+    simHint: 'Înlocuiește atingerea unei etichete NFC fizice. Deschide floarea ca și cum ar fi scanată.',
+  },
 };
 
 export default function GardenScreen() {
   const [lang] = useLang();
   const x = TXT[lang];
   const insets = useSafeAreaInsets();
-  const [, refresh] = useState(0);
-  useFocusEffect(useCallback(() => { refresh((n) => n + 1); }, [])); // re-read when the tab is shown
+  // Reactive collection store: re-renders automatically when a scan updates it, so the
+  // old useFocusEffect re-read hack is no longer needed.
+  const collection = useCollection();
   const flowers = useFlowers();
-  const owned = collectedIds();
-  const badges = evaluateBadges(owned, totalPoints(), flowers.length);
+  const owned = collection.collectedIds;
+  const badges = evaluateBadges(owned, collection.total, flowers.length);
 
   return (
     <ScrollView style={{ backgroundColor: Brand.paper }}
@@ -60,6 +74,30 @@ export default function GardenScreen() {
           </View>
         ))}
       </View>
+
+      {/* Demo-only: stands in for tapping a physical NFC tag. Each button opens the
+          flower via the same /f/<id> route a real tag deep-links to, which runs the
+          real check-in (writes to the DB, awards points once, auto-plays the story on
+          first scan). Safe to leave in for the hackathon; ignore during the pitch. */}
+      <Text style={s.h2}>{x.simTitle}</Text>
+      <Text style={s.count}>{x.simHint}</Text>
+      <View style={s.simList}>
+        {flowers.map((f) => {
+          const have = owned.includes(f.id);
+          return (
+            <Pressable
+              key={f.id}
+              onPress={() => router.push(`/f/${f.id}`)}
+              accessibilityRole="button"
+              accessibilityLabel={`Simulate scan: ${f.name[lang]}`}
+              style={({ pressed }) => [s.simBtn, pressed && s.pressed]}>
+              <View style={[s.simDot, { backgroundColor: f.color }]} />
+              <Text style={s.simName} numberOfLines={1}>{f.name[lang]}</Text>
+              <Text style={s.simState}>{have ? '✓' : '▶'}</Text>
+            </Pressable>
+          );
+        })}
+      </View>
     </ScrollView>
   );
 }
@@ -84,4 +122,21 @@ const s = StyleSheet.create({
   badgeEmoji: { fontSize: 30 },
   badgeTitle: { fontSize: 12, fontWeight: '800', color: Brand.ink, textAlign: 'center' },
   badgeProg: { fontSize: 12, color: Brand.inkSoft },
+  // Demo "simulate scan" controls.
+  simList: { gap: 10, marginTop: 4 },
+  simBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    backgroundColor: Brand.white,
+    borderWidth: 2,
+    borderColor: Brand.ink,
+    borderStyle: 'dashed',
+    borderRadius: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+  },
+  simDot: { width: 22, height: 22, borderRadius: 11, borderWidth: 2, borderColor: Brand.ink },
+  simName: { flex: 1, fontSize: 15, fontWeight: '800', color: Brand.ink },
+  simState: { fontSize: 16, fontWeight: '800', color: Brand.blue },
 });

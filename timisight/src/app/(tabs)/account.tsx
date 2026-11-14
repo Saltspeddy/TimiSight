@@ -4,6 +4,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { LangToggle } from '@/components/lang-toggle';
 import { BORDER, Brand, hardShadow } from '@/constants/brand';
+import { useCollection } from '@/constants/collection';
 import { LEADERBOARD, ME } from '@/constants/site-data';
 import { useAuth } from '@/hooks/auth';
 import { useLang } from '@/hooks/use-lang';
@@ -12,8 +13,11 @@ export default function AccountScreen() {
   const [, t] = useLang();
   const insets = useSafeAreaInsets();
   const { user, isLoading, signOut } = useAuth();
+  // Real balance from the unified ledger (same points earned by scanning flowers).
+  const { total } = useCollection();
 
-  // Derive this player's rank from the shared leaderboard data (demo).
+  // Rank is still derived from the demo leaderboard (DB leaderboard wiring is a
+  // separate task); fall back the comparison name to the demo "You" row.
   const ranked = [...LEADERBOARD].sort((a, b) => b.points - a.points);
   const rank = ranked.findIndex((r) => r.name === ME.name) + 1;
 
@@ -63,7 +67,7 @@ export default function AccountScreen() {
         <View style={styles.banner}>
           <Text style={styles.bannerLabel}>{t.accountBalance}</Text>
           <Text style={styles.bannerValue}>
-            {ME.points} {t.points}
+            {total} {t.points}
           </Text>
         </View>
 
@@ -72,7 +76,7 @@ export default function AccountScreen() {
           <View style={styles.row}>
             <Text style={styles.dt}>{t.accountLifetime}</Text>
             <Text style={styles.dd}>
-              {ME.lifetime} {t.points}
+              {total} {t.points}
             </Text>
           </View>
           <View style={styles.row}>
