@@ -5,7 +5,9 @@ import Animated, { Keyframe, Easing } from 'react-native-reanimated';
 import classes from './animated-icon.module.css';
 const DURATION = 300;
 
-export function AnimatedSplashOverlay() {
+// Web has no native splash to hide; the `ready` prop is accepted for parity with the
+// native variant but unused here.
+export function AnimatedSplashOverlay(_props: { ready?: boolean }) {
   return null;
 }
 

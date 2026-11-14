@@ -11,7 +11,7 @@ import { useLang } from '@/hooks/use-lang';
 export default function AccountScreen() {
   const [, t] = useLang();
   const insets = useSafeAreaInsets();
-  const { user, isLoading, isAuthenticated, signIn, signOut } = useAuth();
+  const { user, isLoading, signOut } = useAuth();
 
   // Derive this player's rank from the shared leaderboard data (demo).
   const ranked = [...LEADERBOARD].sort((a, b) => b.points - a.points);
@@ -37,7 +37,7 @@ export default function AccountScreen() {
         ) : (
           <View style={styles.head}>
             <View style={styles.avatar}>
-              {isAuthenticated && user?.picture ? (
+              {user?.picture ? (
                 <Image source={{ uri: user.picture }} style={styles.avatarImage} />
               ) : (
                 <Text style={styles.avatarText}>{displayName.charAt(0).toUpperCase()}</Text>
@@ -45,27 +45,19 @@ export default function AccountScreen() {
             </View>
             <View style={styles.headText}>
               <Text style={styles.name}>{displayName}</Text>
-              {isAuthenticated && user?.email ? (
-                <Text style={styles.email}>{user.email}</Text>
-              ) : null}
+              {user?.email ? <Text style={styles.email}>{user.email}</Text> : null}
             </View>
           </View>
         )}
 
-        {/* Auth action: log in when signed out, log out when signed in. */}
-        {!isLoading &&
-          (isAuthenticated ? (
-            <Pressable style={styles.authBtn} onPress={() => void signOut()}>
-              <Text style={styles.authBtnText}>{t.authLogout}</Text>
-            </Pressable>
-          ) : (
-            <View style={styles.authBlock}>
-              <Text style={styles.authHint}>{t.authSignedOutHint}</Text>
-              <Pressable style={styles.authBtn} onPress={() => void signIn()}>
-                <Text style={styles.authBtnText}>{t.authLogin}</Text>
-              </Pressable>
-            </View>
-          ))}
+        {/* Log out. The account tab is only reachable while authenticated (the root
+            layout's guard), so there is no logged-out branch here; signing out flips the
+            guard and drops the user back to the login screen. */}
+        {!isLoading && (
+          <Pressable style={styles.authBtn} onPress={() => void signOut()}>
+            <Text style={styles.authBtnText}>{t.authLogout}</Text>
+          </Pressable>
+        )}
 
         {/* Points balance banner */}
         <View style={styles.banner}>
@@ -123,8 +115,6 @@ const styles = StyleSheet.create({
   loading: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 20 },
   loadingText: { fontSize: 16, color: Brand.inkFaint },
 
-  authBlock: { gap: 10 },
-  authHint: { fontSize: 15, color: Brand.inkSoft },
   authBtn: {
     alignSelf: 'flex-start',
     backgroundColor: Brand.blue,
