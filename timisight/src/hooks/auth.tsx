@@ -164,16 +164,32 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Open the Auth0 end-session flow FIRST, and only clear the local session once it
     // actually completed. The browser returns to `redirectUri` (timisight://redirect),
     // which resolves to the `/redirect` route and bounces back to the account tab, so the
-    // "You have successfully logged out" page closes automatically with no Unmatched Route.
+    // "You have successfully logged out" page closes automatically.
     //
-    // If the user cancels/dismisses Auth0's logout confirmation, the result is not
-    // `success`, so local state is left intact and the app stays signed in — a cancelled
-    // logout must NOT log the user out locally. If discovery hasn't resolved yet, or the
-    // browser throws, leave the session untouched rather than clearing blindly.
+    // The discovery `endSessionEndpoint` is the OIDC logout endpoint, so it must be given
+    // the OIDC parameters `post_logout_redirect_uri` + `id_token_hint` — NOT the legacy
+    // `/v2/logout` parameter `returnTo`. With the wrong (legacy) parameter Auth0 ignores
+    // the redirect, parks the user on the "successfully logged out" page, and never fires
+    // the `returnTo`, so the browser never auto-closes and the result is `dismiss` rather
+    // than `success`. Using the OIDC params makes Auth0 redirect back, which both closes
+    // the browser and yields a `success` result. `id_token_hint` (the stored id_token)
+    // lets Auth0 honor the redirect without prompting.
+    //
+    // Local state is cleared ONLY on a `success` result. If the user dismisses the logout
+    // page, or discovery/the id_token is unavailable, or the browser throws, the session
+    // is left intact — a cancelled logout must NOT log the user out locally.
     if (!discovery?.endSessionEndpoint) return;
-    const logoutUrl =
-      `${discovery.endSessionEndpoint}?client_id=${encodeURIComponent(clientId)}` +
-      `&returnTo=${encodeURIComponent(redirectUri)}`;
+
+    const stored = await loadSession();
+    const idTokenHint = stored?.tokens.idToken;
+
+    const params = new URLSearchParams({
+      client_id: clientId,
+      post_logout_redirect_uri: redirectUri,
+    });
+    if (idTokenHint) params.set('id_token_hint', idTokenHint);
+    const logoutUrl = `${discovery.endSessionEndpoint}?${params.toString()}`;
+
     try {
       const result = await WebBrowser.openAuthSessionAsync(logoutUrl, redirectUri);
       if (result.type === 'success') {
