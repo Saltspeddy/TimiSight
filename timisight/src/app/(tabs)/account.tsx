@@ -1,18 +1,24 @@
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Image } from 'expo-image';
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { LangToggle } from '@/components/lang-toggle';
 import { BORDER, Brand, hardShadow } from '@/constants/brand';
 import { LEADERBOARD, ME } from '@/constants/site-data';
+import { useAuth } from '@/hooks/auth';
 import { useLang } from '@/hooks/use-lang';
 
 export default function AccountScreen() {
   const [, t] = useLang();
   const insets = useSafeAreaInsets();
+  const { user, isLoading, isAuthenticated, signIn, signOut } = useAuth();
 
   // Derive this player's rank from the shared leaderboard data (demo).
   const ranked = [...LEADERBOARD].sort((a, b) => b.points - a.points);
   const rank = ranked.findIndex((r) => r.name === ME.name) + 1;
+
+  // The signed-in display name falls back to the demo "You" when the profile omits it.
+  const displayName = user?.name ?? user?.email ?? ME.name;
 
   return (
     <View style={styles.root}>
@@ -22,13 +28,44 @@ export default function AccountScreen() {
         <Text style={styles.h2}>{t.accountTitle}</Text>
         <Text style={styles.sub}>{t.accountText}</Text>
 
-        {/* Identity header */}
-        <View style={styles.head}>
-          <View style={styles.avatar}>
-            <Text style={styles.avatarText}>{ME.name.charAt(0).toUpperCase()}</Text>
+        {/* Identity header — reflects the Auth0 session once signed in. */}
+        {isLoading ? (
+          <View style={styles.loading}>
+            <ActivityIndicator color={Brand.ink} />
+            <Text style={styles.loadingText}>{t.authLoading}</Text>
           </View>
-          <Text style={styles.name}>{ME.name}</Text>
-        </View>
+        ) : (
+          <View style={styles.head}>
+            <View style={styles.avatar}>
+              {isAuthenticated && user?.picture ? (
+                <Image source={{ uri: user.picture }} style={styles.avatarImage} />
+              ) : (
+                <Text style={styles.avatarText}>{displayName.charAt(0).toUpperCase()}</Text>
+              )}
+            </View>
+            <View style={styles.headText}>
+              <Text style={styles.name}>{displayName}</Text>
+              {isAuthenticated && user?.email ? (
+                <Text style={styles.email}>{user.email}</Text>
+              ) : null}
+            </View>
+          </View>
+        )}
+
+        {/* Auth action: log in when signed out, log out when signed in. */}
+        {!isLoading &&
+          (isAuthenticated ? (
+            <Pressable style={styles.authBtn} onPress={() => void signOut()}>
+              <Text style={styles.authBtnText}>{t.authLogout}</Text>
+            </Pressable>
+          ) : (
+            <View style={styles.authBlock}>
+              <Text style={styles.authHint}>{t.authSignedOutHint}</Text>
+              <Pressable style={styles.authBtn} onPress={() => void signIn()}>
+                <Text style={styles.authBtnText}>{t.authLogin}</Text>
+              </Pressable>
+            </View>
+          ))}
 
         {/* Points balance banner */}
         <View style={styles.banner}>
@@ -66,6 +103,7 @@ const styles = StyleSheet.create({
   sub: { fontSize: 16, color: Brand.inkFaint, marginBottom: 20, fontStyle: 'italic' },
 
   head: { flexDirection: 'row', alignItems: 'center', gap: 14, marginBottom: 20 },
+  headText: { flex: 1 },
   avatar: {
     width: 72,
     height: 72,
@@ -75,9 +113,30 @@ const styles = StyleSheet.create({
     borderColor: Brand.ink,
     alignItems: 'center',
     justifyContent: 'center',
+    overflow: 'hidden',
   },
+  avatarImage: { width: '100%', height: '100%' },
   avatarText: { color: '#fff', fontSize: 30, fontWeight: '800' },
   name: { fontSize: 22, fontWeight: '800', color: Brand.ink },
+  email: { fontSize: 14, color: Brand.inkFaint, marginTop: 2 },
+
+  loading: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 20 },
+  loadingText: { fontSize: 16, color: Brand.inkFaint },
+
+  authBlock: { gap: 10 },
+  authHint: { fontSize: 15, color: Brand.inkSoft },
+  authBtn: {
+    alignSelf: 'flex-start',
+    backgroundColor: Brand.blue,
+    borderWidth: BORDER,
+    borderColor: Brand.ink,
+    borderRadius: 10,
+    paddingVertical: 12,
+    paddingHorizontal: 18,
+    marginBottom: 20,
+    ...hardShadow(4),
+  },
+  authBtnText: { color: '#fff', fontSize: 16, fontWeight: '800' },
 
   banner: {
     flexDirection: 'row',

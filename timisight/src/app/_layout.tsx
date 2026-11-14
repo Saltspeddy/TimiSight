@@ -4,6 +4,7 @@ import { useColorScheme } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import { AnimatedSplashOverlay } from '@/components/animated-icon';
+import { AuthProvider } from '@/hooks/auth';
 import { hydratePerks } from '@/hooks/use-perks';
 
 SplashScreen.preventAutoHideAsync();
@@ -17,11 +18,13 @@ export default function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-        <AnimatedSplashOverlay />
-        <Stack screenOptions={{ headerShown: false }}>
-          <Stack.Screen name="(tabs)" />
-          <Stack.Screen name="place/[id]" options={{ presentation: 'card' }} />
-        </Stack>
+        <AuthProvider>
+          <AnimatedSplashOverlay />
+          <Stack screenOptions={{ headerShown: false }}>
+            <Stack.Screen name="(tabs)" />
+            <Stack.Screen name="place/[id]" options={{ presentation: 'card' }} />
+          </Stack>
+        </AuthProvider>
       </ThemeProvider>
     </GestureHandlerRootView>
   );

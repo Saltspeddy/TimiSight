@@ -55,6 +55,10 @@ export const T = {
     accountLifetime: 'Lifetime earned',
     accountRank: 'Leaderboard rank',
     accountLanguage: 'Language',
+    authLogin: 'Log in with Auth0',
+    authLogout: 'Log out',
+    authLoading: 'Loading…',
+    authSignedOutHint: 'Sign in to sync your account.',
     footer: 'Made in Timișoara for UniHack.',
   },
   ro: {
@@ -109,6 +113,10 @@ export const T = {
     accountLifetime: 'Total câștigat',
     accountRank: 'Loc în clasament',
     accountLanguage: 'Limbă',
+    authLogin: 'Conectare cu Auth0',
+    authLogout: 'Deconectare',
+    authLoading: 'Se încarcă…',
+    authSignedOutHint: 'Conectează-te pentru a-ți sincroniza contul.',
     footer: 'Făcut în Timișoara pentru UniHack.',
   },
 } as const;
