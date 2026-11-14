@@ -1,5 +1,4 @@
-// Shared content for TimiSight, ported from the uniprep website (lib/site-data.ts).
-// Keep this in sync with the web app so both show the same copy and places.
+// Shared copy for the TimiSight mobile app (English and Romanian).
 
 export type Lang = 'en' | 'ro';
 
@@ -7,35 +6,25 @@ export const T = {
   en: {
     appName: 'TimiSight',
     tabs: { home: 'Home', places: 'Garden', shop: 'Shop', board: 'Leaderboard', account: 'Account' },
-    heroTitle: 'Walk Timișoara. See it as it was.',
+    heroTitle: 'Bloom in Timișoara.',
     heroText:
-      'Visit real places in the city, check in to climb the leaderboard, and point your camera to see the past appear in AR.',
-    cta: 'See the places',
-    howTitle: 'Three steps through time',
+      'Flowers are scattered all over the city. Tap one with your phone to collect it, learn the story of its place and earn badges.',
+    cta: 'Open the garden',
+    stamp: ['Timișoara', 'Bloom', '2026'] as [string, string, string],
+    howTitle: 'Three steps to a full garden',
     how: [
-      ['Explore', 'Find landmarks and social events on the city map.'],
-      ['Check in', 'Visit a place, scan it, and your name moves up the leaderboard.'],
-      ['See the past', 'Open the camera and watch older versions of the place appear in AR.'],
+      ['Find', 'Spot a flower somewhere in the city. Each one stands for a place, an event or a local business.'],
+      ['Tap', 'Hold your phone to its NFC tag. The flower joins your garden and earns you points.'],
+      ['Learn', 'Read its story, collect badges and spend your points on perks from local partners.'],
     ] as [string, string][],
     teamTitle: 'The team',
-    teamText: 'Built at UniHack, Museum track.',
-    roles: ['Frontend', 'Backend', 'AR', 'Design'],
-    placesTitle: 'Five places, five QR codes',
-    placesText: 'Scan a code on site to open that place’s page. Two are live in this demo.',
-    open: 'Open',
-    soon: 'Coming soon',
+    teamText: 'Built at UniHack 2026.',
     back: 'Back',
-    history: 'Then and now',
-    then: 'Then',
-    now: 'Now',
-    drag: 'Drag to compare',
-    checkin: 'Check in here',
-    checked: 'Checked in. +100 points (demo).',
     boardTitle: 'Leaderboard',
-    boardText: 'Check in at places to earn points and climb the ranking.',
+    boardText: 'Collect flowers to earn points and climb the ranking.',
     points: 'pts',
     shopTitle: 'Points shop',
-    shopText: 'Spend the points you earn exploring the city.',
+    shopText: 'Spend the points you earn collecting flowers.',
     shopBalance: 'Your balance',
     shopRedeem: 'Redeem',
     shopSoldOut: 'Sold out',
@@ -50,13 +39,13 @@ export const T = {
     shopClaim: 'Claim',
     shopClaimed: 'claimed',
     accountTitle: 'Your account',
-    accountText: 'Track your points and climb the leaderboard.',
+    accountText: 'Track your points and watch your garden grow.',
     accountBalance: 'Points balance',
     accountLifetime: 'Lifetime earned',
     accountRank: 'Leaderboard rank',
     accountLanguage: 'Language',
     loginTitle: 'Welcome to TimiSight',
-    loginText: 'Log in to explore the city and climb the leaderboard.',
+    loginText: 'Log in to start collecting the flowers of Timișoara.',
     authLogin: 'Log in with Auth0',
     authSigningIn: 'Signing in…',
     authLogout: 'Log out',
@@ -67,36 +56,25 @@ export const T = {
   ro: {
     appName: 'TimiSight',
     tabs: { home: 'Acasă', places: 'Grădina', shop: 'Magazin', board: 'Clasament', account: 'Cont' },
-    heroTitle: 'Plimbă-te prin Timișoara. Vezi-o așa cum a fost.',
+    heroTitle: 'Înflorește în Timișoara.',
     heroText:
-      'Vizitează locuri reale din oraș, fă check-in ca să urci în clasament și îndreaptă camera spre trecut, în realitate augmentată.',
-    cta: 'Vezi locurile',
-    howTitle: 'Trei pași prin timp',
+      'Flori ascunse peste tot în oraș. Atinge una cu telefonul ca s-o colecționezi, să afli povestea locului ei și să câștigi insigne.',
+    cta: 'Deschide grădina',
+    stamp: ['Timișoara', 'Floare', '2026'] as [string, string, string],
+    howTitle: 'Trei pași până la grădina completă',
     how: [
-      ['Explorează', 'Găsește repere și evenimente sociale pe harta orașului.'],
-      ['Fă check-in', 'Vizitează un loc, scanează-l și urci în clasament.'],
-      ['Vezi trecutul', 'Deschide camera și privește cum apar versiuni mai vechi ale locului în AR.'],
+      ['Găsește', 'Descoperă o floare undeva în oraș. Fiecare reprezintă un loc, un eveniment sau o afacere locală.'],
+      ['Atinge', 'Apropie telefonul de eticheta ei NFC. Floarea intră în grădina ta și îți aduce puncte.'],
+      ['Învață', 'Citește povestea ei, strânge insigne și cheltuiește punctele pe beneficii de la parteneri locali.'],
     ] as [string, string][],
     teamTitle: 'Echipa',
-    teamText: 'Creat la UniHack, secțiunea Muzeu.',
-    roles: ['Frontend', 'Backend', 'AR', 'Design'],
-    placesTitle: 'Cinci locuri, cinci coduri QR',
-    placesText:
-      'Scanează un cod la fața locului ca să deschizi pagina acelui loc. Două sunt active în demo.',
-    open: 'Deschide',
-    soon: 'În curând',
+    teamText: 'Creat la UniHack 2026.',
     back: 'Înapoi',
-    history: 'Atunci și acum',
-    then: 'Atunci',
-    now: 'Acum',
-    drag: 'Trage pentru a compara',
-    checkin: 'Fă check-in aici',
-    checked: 'Check-in făcut. +100 puncte (demo).',
     boardTitle: 'Clasament',
-    boardText: 'Fă check-in la locuri ca să câștigi puncte și să urci în clasament.',
+    boardText: 'Colecționează flori ca să câștigi puncte și să urci în clasament.',
     points: 'pct',
     shopTitle: 'Magazin de puncte',
-    shopText: 'Cheltuie punctele câștigate explorând orașul.',
+    shopText: 'Cheltuiește punctele câștigate colecționând flori.',
     shopBalance: 'Soldul tău',
     shopRedeem: 'Revendică',
     shopSoldOut: 'Epuizat',
@@ -111,13 +89,13 @@ export const T = {
     shopClaim: 'Revendică',
     shopClaimed: 'revendicate',
     accountTitle: 'Contul tău',
-    accountText: 'Urmărește-ți punctele și urcă în clasament.',
+    accountText: 'Urmărește-ți punctele și vezi cum crește grădina ta.',
     accountBalance: 'Sold puncte',
     accountLifetime: 'Total câștigat',
     accountRank: 'Loc în clasament',
     accountLanguage: 'Limbă',
     loginTitle: 'Bun venit la TimiSight',
-    loginText: 'Conectează-te ca să explorezi orașul și să urci în clasament.',
+    loginText: 'Conectează-te ca să începi să colecționezi florile Timișoarei.',
     authLogin: 'Conectare cu Auth0',
     authSigningIn: 'Se conectează…',
     authLogout: 'Deconectare',
@@ -130,57 +108,6 @@ export const T = {
 // Translations object for a single language. Using the union of both languages
 // keeps `t` usable regardless of which language is active.
 export type Tr = (typeof T)[Lang];
-
-export type Copy = { name: string; text?: string; era?: string };
-export type Place = {
-  id: string;
-  live: boolean;
-  year?: number;
-  thenImg?: string;
-  nowImg?: string;
-  en: Copy;
-  ro: Copy;
-};
-
-export const PLACES: Place[] = [
-  {
-    id: 'opera',
-    live: true,
-    year: 1989,
-    thenImg: 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/4a/Timisoara_Opera.jpg/640px-Timisoara_Opera.jpg',
-    nowImg: 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/4a/Timisoara_Opera.jpg/640px-Timisoara_Opera.jpg',
-    en: {
-      name: 'Opera House, Victory Square',
-      era: 'December 1989',
-      text: 'The steps of the Opera were a gathering point in December 1989, when Timișoara declared itself free of communism. Point your camera here in the app to see the square as it looked during those days.',
-    },
-    ro: {
-      name: 'Opera, Piața Victoriei',
-      era: 'Decembrie 1989',
-      text: 'Treptele Operei au fost loc de adunare în decembrie 1989, când Timișoara s-a declarat liberă de comunism. În aplicație, îndreaptă camera aici ca să vezi piața așa cum arăta în acele zile.',
-    },
-  },
-  {
-    id: 'unirii',
-    live: true,
-    year: 1900,
-    thenImg: 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/95/Piata_Unirii_Timisoara.jpg/640px-Piata_Unirii_Timisoara.jpg',
-    nowImg: 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/95/Piata_Unirii_Timisoara.jpg/640px-Piata_Unirii_Timisoara.jpg',
-    en: {
-      name: 'Union Square',
-      era: 'Early 1900s',
-      text: 'A baroque square from the Habsburg era, framed by the Roman Catholic Dome and the Serbian Orthodox Cathedral. Scan it in the app to see earlier versions of the square.',
-    },
-    ro: {
-      name: 'Piața Unirii',
-      era: 'Începutul secolului XX',
-      text: 'O piață barocă din perioada habsburgică, înconjurată de Domul Romano-Catolic și de Catedrala Ortodoxă Sârbă. Scaneaz-o în aplicație ca să vezi versiuni mai vechi ale pieței.',
-    },
-  },
-  { id: 'p3', live: false, en: { name: 'Liberty Square' }, ro: { name: 'Piața Libertății' } },
-  { id: 'p4', live: false, en: { name: 'Metropolitan Cathedral' }, ro: { name: 'Catedrala Mitropolitană' } },
-  { id: 'p5', live: false, en: { name: 'Bastion' }, ro: { name: 'Bastionul' } },
-];
 
 export const TEAM = [
   { name: 'Radu Daniel-George' },
