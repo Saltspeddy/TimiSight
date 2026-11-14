@@ -12,6 +12,9 @@ export default function TabsLayout() {
     <NativeTabs
       backgroundColor={Brand.paper}
       indicatorColor={Brand.yellow}
+      // Strong ink icons by default (not the muted OS gray); blue when selected
+      // to match the label color below.
+      iconColor={{ default: Brand.ink, selected: Brand.blue }}
       labelStyle={{ color: Brand.ink, selected: { color: Brand.blue } }}>
       <NativeTabs.Trigger name="index">
         <Label>{t.tabs.home}</Label>
@@ -31,6 +34,11 @@ export default function TabsLayout() {
       <NativeTabs.Trigger name="leaderboard">
         <Label>{t.tabs.board}</Label>
         <Icon src={<VectorIcon family={MaterialIcons} name="leaderboard" />} />
+      </NativeTabs.Trigger>
+
+      <NativeTabs.Trigger name="account">
+        <Label>{t.tabs.account}</Label>
+        <Icon src={<VectorIcon family={MaterialIcons} name="person" />} />
       </NativeTabs.Trigger>
     </NativeTabs>
   );
