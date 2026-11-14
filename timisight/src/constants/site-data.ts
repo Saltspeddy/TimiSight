@@ -6,7 +6,20 @@ export type Lang = 'en' | 'ro';
 export const T = {
   en: {
     appName: 'TimiSight',
-    tabs: { home: 'Home', places: 'Garden', shop: 'Shop', board: 'Leaderboard', account: 'Account' },
+    tabs: { home: 'Home', places: 'Garden', shop: 'Shop', board: 'Leaderboard', quests: 'Quests', account: 'Account' },
+    quests: {
+      title: 'Quests',
+      dailyTitle: 'Daily Quests',
+      dailyDone: 'Done today',
+      dailyEmpty: 'No daily quest yet — sign in to get today’s quest.',
+      pathsTitle: 'Flower Paths',
+      pathsEmpty: 'No flower paths yet. Scan a flower to begin one.',
+      pathStop: 'Stop',
+      bonus: 'Completion bonus',
+      pathDone: 'Path complete!',
+      badgeEarned: 'Badge earned',
+      tapToScan: 'Tap to visit',
+    },
     heroTitle: 'Walk Timișoara. See it as it was.',
     heroText:
       'Visit real places in the city, check in to climb the leaderboard, and point your camera to see the past appear in AR.',
@@ -66,7 +79,20 @@ export const T = {
   },
   ro: {
     appName: 'TimiSight',
-    tabs: { home: 'Acasă', places: 'Grădina', shop: 'Magazin', board: 'Clasament', account: 'Cont' },
+    tabs: { home: 'Acasă', places: 'Grădina', shop: 'Magazin', board: 'Clasament', quests: 'Misiuni', account: 'Cont' },
+    quests: {
+      title: 'Misiuni',
+      dailyTitle: 'Misiuni zilnice',
+      dailyDone: 'Realizată azi',
+      dailyEmpty: 'Nicio misiune zilnică încă — conectează-te pentru misiunea de azi.',
+      pathsTitle: 'Trasee florale',
+      pathsEmpty: 'Niciun traseu floral încă. Scanează o floare ca să începi unul.',
+      pathStop: 'Oprire',
+      bonus: 'Bonus de finalizare',
+      pathDone: 'Traseu finalizat!',
+      badgeEarned: 'Insignă obținută',
+      tapToScan: 'Atinge pentru a vizita',
+    },
     heroTitle: 'Plimbă-te prin Timișoara. Vezi-o așa cum a fost.',
     heroText:
       'Vizitează locuri reale din oraș, fă check-in ca să urci în clasament și îndreaptă camera spre trecut, în realitate augmentată.',

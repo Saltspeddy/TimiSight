@@ -21,10 +21,11 @@ export type CheckInResult = { already: boolean; earned: number; total: number };
 type CollectionState = {
   collectedIds: string[];
   total: number;
+  lifetime: number;
   hydrated: boolean;
 };
 
-let state: CollectionState = { collectedIds: [], total: 0, hydrated: false };
+let state: CollectionState = { collectedIds: [], total: 0, lifetime: 0, hydrated: false };
 let inFlight: Promise<void> | null = null;
 const listeners = new Set<() => void>();
 
@@ -48,7 +49,7 @@ async function loadCollection(): Promise<void> {
     try {
       const [flowersRes, pointsRes] = await Promise.all([
         supabase.from('user_flowers').select('flower_id'),
-        supabase.from('user_points_a0').select('balance').maybeSingle(),
+        supabase.from('user_points_a0').select('balance, lifetime').maybeSingle(),
       ]);
 
       const ids = (flowersRes.data ?? []).map((r) => r.flower_id as string);
@@ -56,8 +57,14 @@ async function loadCollection(): Promise<void> {
         pointsRes.data && typeof pointsRes.data.balance === 'number'
           ? pointsRes.data.balance
           : 0;
+      // lifetime = earned-only total (balance = earned - spent). The DB view exposes both;
+      // the account screen binds "Lifetime earned" to this and "Points balance" to total.
+      const lifetime =
+        pointsRes.data && typeof pointsRes.data.lifetime === 'number'
+          ? pointsRes.data.lifetime
+          : 0;
 
-      setState({ collectedIds: ids, total: balance, hydrated: true });
+      setState({ collectedIds: ids, total: balance, lifetime, hydrated: true });
     } catch (e) {
       // Network/permission failure: keep whatever we had, mark hydrated so the UI
       // stops showing a loading state. Logged for debugging.
@@ -112,11 +119,13 @@ export async function checkIn(flowerId: string): Promise<CheckInResult> {
 
   const result = coerceResult(data);
 
-  // Reflect the server truth locally without a round-trip.
+  // Reflect the server truth locally without a round-trip. A first-time check-in also
+  // raises lifetime (earned-only) by the amount awarded; a repeat scan earns nothing.
   const owned = state.collectedIds.includes(flowerId)
     ? state.collectedIds
     : [...state.collectedIds, flowerId];
-  setState({ collectedIds: owned, total: result.total, hydrated: true });
+  const lifetime = result.already ? state.lifetime : state.lifetime + result.earned;
+  setState({ collectedIds: owned, total: result.total, lifetime, hydrated: true });
 
   return result;
 }
@@ -127,9 +136,34 @@ export async function checkIn(flowerId: string): Promise<CheckInResult> {
  * flower catalogue). On sign-out the reload reads back nothing and the snapshot is empty.
  */
 export function resetCollectionForUserChange(): void {
-  state = { collectedIds: [], total: 0, hydrated: false };
+  state = { collectedIds: [], total: 0, lifetime: 0, hydrated: false };
   emit();
   void loadCollection();
+}
+
+/**
+ * Quest-write helper used by the scan flow (flower-view.tsx) after a successful check-in.
+ * Activates any path whose start flower is the scanned one, then checks path completion for
+ * each path that lists the flower. Both RPCs are idempotent server-side, so repeat scans are
+ * harmless. Each call is isolated in try/catch so a quest write can NEVER break the scan UX.
+ * This keeps checkIn's signature/behaviour unchanged and collection.ts free of quest-catalogue
+ * knowledge (the caller supplies the relevant pathIds).
+ */
+export async function activateAndComplete(flowerId: string, pathIds: string[]): Promise<void> {
+  try {
+    const { error } = await supabase.rpc('activate_paths_for_flower', { p_flower: flowerId });
+    if (error) throw error;
+  } catch (e) {
+    console.warn('[collection] activate_paths_for_flower failed:', e);
+  }
+  for (const pathId of pathIds) {
+    try {
+      const { error } = await supabase.rpc('complete_path_if_done', { p_path: pathId });
+      if (error) throw error;
+    } catch (e) {
+      console.warn('[collection] complete_path_if_done failed:', e);
+    }
+  }
 }
 
 /**

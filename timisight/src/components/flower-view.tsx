@@ -7,11 +7,12 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { FlowerStory } from '@/components/flower-story';
 
 import { BORDER, Brand, hardShadow } from '@/constants/brand';
-import { checkIn, useCollection, type CheckInResult } from '@/constants/collection';
+import { activateAndComplete, checkIn, useCollection, type CheckInResult } from '@/constants/collection';
 import type { Lang } from '@/constants/site-data';
 import { useAuth } from '@/hooks/auth';
 import { useFlowers } from '@/hooks/use-flowers';
 import { useLang } from '@/hooks/use-lang';
+import { refreshQuests, useQuests } from '@/hooks/use-quests';
 
 const TXT = {
   en: { watch: '▶ Watch the story', checked: 'Checked in', already: 'You already have it in your garden', alreadySub: 'Each flower pays points once.',
@@ -40,6 +41,7 @@ export function FlowerView({ id, scanned = false }: { id: string; scanned?: bool
   const { isAuthenticated } = useAuth();
   const flowers = useFlowers();
   const collection = useCollection();
+  const quests = useQuests();
   const flower = flowers.find((f) => f.id === id);
   const [result, setResult] = useState<CheckInResult | null>(null);
   const [story, setStory] = useState(false);
@@ -62,6 +64,16 @@ export function FlowerView({ id, scanned = false }: { id: string; scanned?: bool
         if (!active) return;
         setResult(res);
         if (!res.already) setStory(true);
+
+        // Quest side-effects (additive, never block the scan UX). Activate any path this
+        // flower starts, then check completion for every path that lists it; both RPCs are
+        // idempotent server-side. A casa-muhle scan activates the demo path; collecting the
+        // last stop triggers the one-time completion bonus.
+        const pathIds = quests.paths
+          .filter((p) => p.stops.some((st) => st.flowerId === flower.id))
+          .map((p) => p.id);
+        await activateAndComplete(flower.id, pathIds);
+        void refreshQuests();
       } catch (e) {
         // Server rejected the check-in (e.g. transient error / unknown flower).
         // Leave the UI unchanged; the `ran` guard prevents an automatic retry.
@@ -72,6 +84,9 @@ export function FlowerView({ id, scanned = false }: { id: string; scanned?: bool
     return () => {
       active = false;
     };
+    // `quests` is intentionally omitted: the `ran` guard makes this a one-shot effect, and
+    // re-running it when the quests snapshot changes would re-fire the check-in.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [scanned, flower, isAuthenticated]);
 
   const goBack = () => (router.canGoBack() ? router.back() : router.replace('/'));
@@ -178,7 +193,7 @@ export function FlowerView({ id, scanned = false }: { id: string; scanned?: bool
           </View>
         </Section>
 
-        <Pressable onPress={() => router.push('/leaderboard')} style={s.rank} accessibilityRole="button">
+        <Pressable onPress={() => router.push('/account')} style={s.rank} accessibilityRole="button">
           <Text style={s.rankText}>{x.ranking}</Text>
         </Pressable>
       </ScrollView>
