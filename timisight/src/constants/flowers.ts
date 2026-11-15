@@ -14,6 +14,8 @@ export type Flower = {
   about: L; // the character / story behind the flower
   place: { name: L; text: L };
   rewards: Reward[];
+  artistSub?: string; // Auth0 sub of the artist who made it (flowers.artist_sub), if linked
+  orgSub?: string; // Auth0 sub of the organization it was made for (flowers.org_sub), if linked
 };
 
 // ✏️ EDIT HERE: placeholder rewards, partners and prices.
@@ -33,6 +35,10 @@ const REWARDS: Reward[] = [
 // Add an entry here when you add a new flower with artwork.
 export const FLOWER_IMAGES: Record<string, number> = {
   'violinist-rose': require('../../assets/images/violinist-rose.png'),
+  // The same violinist statue photo: the Opera Rose is the violinist at the opera.
+  'opera-rose': require('../../assets/images/violinist-rose.png'),
+  // The tram flower statue, by the Miklósi museum.
+  'miklosi-tulip': require('../../assets/images/tram-flower.jpg'),
 };
 
 // Shape of a row from the `flowers` table (see web/supabase/flowers.sql and
@@ -50,6 +56,8 @@ export type FlowerRow = {
   character_ro: string | null;
   color: string;
   points: number;
+  artist_sub?: string | null; // added by web/supabase/artist-works.sql
+  org_sub?: string | null; // added by web/supabase/artist-works.sql
 } & Partial<Record<`${'name' | 'place' | 'character'}_${Exclude<Lang, 'en' | 'ro'>}`, string | null>>;
 
 const BLANK: L = { en: '', ro: '', de: '', hu: '', sr: '' };
@@ -81,6 +89,8 @@ export function rowToFlower(r: FlowerRow): Flower {
     about: localized(r, 'character'),
     place: { name: BLANK, text: localized(r, 'place') },
     rewards: REWARDS,
+    artistSub: r.artist_sub ?? undefined,
+    orgSub: r.org_sub ?? undefined,
   };
 }
 

@@ -4,8 +4,10 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { BackButton } from '@/components/back-button';
 import { Button } from '@/components/button';
+import { FlowerCard, flowerGridStyle } from '@/components/flower-card';
 import { BORDER, Brand } from '@/constants/brand';
 import { RC } from '@/constants/roles';
+import { useFlowers } from '@/hooks/use-flowers';
 import { useLang } from '@/hooks/use-lang';
 import { useQuery } from '@/hooks/use-query';
 import { useRole } from '@/hooks/use-role';
@@ -19,6 +21,7 @@ export default function ArtistScreen() {
   const insets = useSafeAreaInsets();
   const { role } = useRole();
   const { data: artist, error, loading, reload } = useQuery(`artist:${sub}`, () => getArtist(sub));
+  const works = useFlowers().filter((f) => f.artistSub === sub);
 
   return (
     <ScrollView
@@ -61,6 +64,17 @@ export default function ArtistScreen() {
               <View style={s.chips}>
                 {artist.specialties.map((sp) => (
                   <Text key={sp} style={s.chip}>{sp}</Text>
+                ))}
+              </View>
+            </View>
+          ) : null}
+
+          {works.length > 0 ? (
+            <View style={{ gap: 10 }}>
+              <Text style={s.h2}>{c.artistWorks}</Text>
+              <View style={flowerGridStyle}>
+                {works.map((f) => (
+                  <FlowerCard key={f.id} flower={f} lang={lang} />
                 ))}
               </View>
             </View>

@@ -9,8 +9,8 @@ import { useRole } from '@/hooks/use-role';
 
 // The tab bar depends on who is signed in:
 //   visitor       Home, Garden, Shop, Leaderboard, Account
-//   organization  Home, Artists, Commissions, Account
-//   artist        Home, Commissions, Account
+//   organization  Home, Artists, Commissions, My flowers, Account
+//   artist        Home, Commissions, My works, Account
 // Every screen stays registered; the ones a role doesn't use are just hidden from the bar.
 export default function TabsLayout() {
   const [lang, t] = useLang();
@@ -63,6 +63,11 @@ export default function TabsLayout() {
       <NativeTabs.Trigger name="commissions" hidden={!isOrg && !isArtist}>
         <Label>{c.tabCommissions}</Label>
         <Icon src={<VectorIcon family={MaterialIcons} name="forum" />} />
+      </NativeTabs.Trigger>
+
+      <NativeTabs.Trigger name="works" hidden={!isArtist && !isOrg}>
+        <Label>{isOrg ? c.tabFlowers : c.tabWorks}</Label>
+        <Icon src={<VectorIcon family={MaterialIcons} name="collections" />} />
       </NativeTabs.Trigger>
 
       <NativeTabs.Trigger name="account">
