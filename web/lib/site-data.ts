@@ -125,6 +125,7 @@ export const FLOWERS: Flower[] = [
     id: 'tram-flower',
     color: '#6cb4e4',
     points: 50,
+    image: '/flowers/Miklosi_tulip.png',
     name: { en: 'Tram Flower', ro: 'Floarea din tramvai' },
     spot: { en: 'Near the Miclosi museum', ro: 'Lângă muzeul Miclosi' },
     about: {

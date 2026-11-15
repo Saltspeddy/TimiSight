@@ -39,14 +39,15 @@ const REWARDS: Reward[] = [
 // Add an entry here when you add a new flower with artwork.
 export const FLOWER_IMAGES: Record<string, number> = {
   'violinist-rose': require('../../assets/images/violinist-rose.png'),
-  // The same violinist statue photo: the Opera Rose is the violinist at the opera.
+  // The Opera Rose uses the violinist statue (it stands by the Opera House).
   'opera-rose': require('../../assets/images/violinist-rose.png'),
   // The tram flower statue, by the Miklósi museum.
-  'miklosi-tulip': require('../../assets/images/tram-flower.jpg'),
-  // TODO: replace with real artwork
-  'casa-muhle': require('../../assets/images/violinist-rose.png'),
-  // TODO: replace with real artwork
-  'timisoreana-malt': require('../../assets/images/violinist-rose.png'),
+  'miklosi-tulip': require('../../assets/flowers/Miklosi_tulip.png'),
+  // The hop (hamei) statue, for the Timișoreana brewery.
+  'timisoreana-malt': require('../../assets/flowers/hamei.png'),
+  // The evening primrose lady with the cocktail.
+  'evening-primrose': require('../../assets/flowers/Primrose.png'),
+  'casa-muhle': require('../../assets/flowers/Muhle.png'),
 };
 
 // Shape of a row from the `flowers` table (see web/supabase/flowers.sql and
