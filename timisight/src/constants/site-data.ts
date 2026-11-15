@@ -23,6 +23,7 @@ export const T = {
       // Location-based quests
       nextStop: 'Next flower',
       mapTitle: 'Where to look',
+      mapUnavailable: 'Map unavailable — add a Google Maps key (see docs/maps-setup.md).',
       locationDenied: 'Enable location to get hot/cold hints toward the next flower.',
       locating: 'Finding your location…',
       headInside: 'You’re here — head inside and scan the flower.',
@@ -117,6 +118,7 @@ export const T = {
       // Misiuni bazate pe locație
       nextStop: 'Floarea următoare',
       mapTitle: 'Unde să cauți',
+      mapUnavailable: 'Harta indisponibilă — adaugă o cheie Google Maps (vezi docs/maps-setup.md).',
       locationDenied: 'Activează locația pentru indicii „cald/rece” spre floarea următoare.',
       locating: 'Îți căutăm locația…',
       headInside: 'Ai ajuns — intră și scanează floarea.',

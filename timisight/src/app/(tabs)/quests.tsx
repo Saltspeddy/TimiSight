@@ -1,7 +1,8 @@
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
+import Constants from 'expo-constants';
 import { GoogleMaps } from 'expo-maps';
 import { router, useFocusEffect } from 'expo-router';
-import { useCallback, useState, type ReactNode } from 'react';
+import { Component, useCallback, useState, type ReactNode } from 'react';
 import { Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import Animated, { FadeIn } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -151,24 +152,70 @@ function HotColdHint({
   );
 }
 
+// Whether a Google Maps Android key was baked into the build (via app.config.js → .env).
+// Read from the resolved Expo config at runtime. Without a key, rendering GoogleMaps.View
+// shows nothing useful and can error, so we skip it and show a hint instead.
+const MAPS_KEY: string =
+  (Constants.expoConfig as any)?.android?.config?.googleMaps?.apiKey ?? '';
+const HAS_MAPS_KEY = MAPS_KEY.trim().length > 0;
+
 /**
- * Daily-quest map pin. Android-only (expo-maps = Google Maps on Android); the project
- * ships Android only. Shows a single marker at the flower's GENERAL location — no hot/cold,
- * no precise guidance. If the flower has no coordinates, renders nothing.
+ * Error boundary around the native map. A native-view failure (module not in the dev build,
+ * invalid key, etc.) must NEVER crash the whole Quests tab — it degrades to a placeholder.
  */
-function DailyMap({ flower, title }: { flower: Flower; title: string }) {
+class MapErrorBoundary extends Component<{ fallback: ReactNode; children: ReactNode }, { failed: boolean }> {
+  state = { failed: false };
+  static getDerivedStateFromError() {
+    return { failed: true };
+  }
+  componentDidCatch(error: unknown) {
+    console.warn('[quests] map failed to render:', error);
+  }
+  render() {
+    return this.state.failed ? this.props.fallback : this.props.children;
+  }
+}
+
+/**
+ * Daily-quest map pin. Android-only (expo-maps = Google Maps on Android); the project ships
+ * Android only. Shows a single marker at the flower's GENERAL location — no hot/cold, no
+ * precise guidance.
+ *
+ * Renders nothing when there are no coordinates or not on Android. When no Maps key is baked
+ * in (the pre-setup state), it shows a short hint instead of the map — see docs/maps-setup.md.
+ * The native view is wrapped in an error boundary so a maps problem degrades to a placeholder
+ * rather than crashing the tab.
+ */
+function DailyMap({ flower, title, hint }: { flower: Flower; title: string; hint: string }) {
   if (flower.lat == null || flower.lng == null) return null;
   if (Platform.OS !== 'android') return null; // Android-only build; no iOS map today.
 
+  if (!HAS_MAPS_KEY) {
+    return (
+      <View style={[sx.mapWrap, sx.mapPlaceholder]}>
+        <MaterialIcons name="map" size={28} color={Brand.inkFaint} />
+        <Text style={sx.mapHint}>{hint}</Text>
+      </View>
+    );
+  }
+
   const coordinates = { latitude: flower.lat, longitude: flower.lng };
   return (
-    <View style={sx.mapWrap}>
-      <GoogleMaps.View
-        style={StyleSheet.absoluteFill}
-        cameraPosition={{ coordinates, zoom: 15 }}
-        markers={[{ coordinates, title }]}
-      />
-    </View>
+    <MapErrorBoundary
+      fallback={
+        <View style={[sx.mapWrap, sx.mapPlaceholder]}>
+          <MaterialIcons name="map" size={28} color={Brand.inkFaint} />
+          <Text style={sx.mapHint}>{hint}</Text>
+        </View>
+      }>
+      <View style={sx.mapWrap}>
+        <GoogleMaps.View
+          style={StyleSheet.absoluteFill}
+          cameraPosition={{ coordinates, zoom: 15 }}
+          markers={[{ coordinates, title }]}
+        />
+      </View>
+    </MapErrorBoundary>
   );
 }
 
@@ -266,7 +313,11 @@ export default function QuestsScreen() {
               {showDailyMap && dailyFlower ? (
                 <>
                   <Text style={sx.mapTitle}>{t.quests.mapTitle}</Text>
-                  <DailyMap flower={dailyFlower} title={flowerName(daily.flowerId)} />
+                  <DailyMap
+                    flower={dailyFlower}
+                    title={flowerName(daily.flowerId)}
+                    hint={t.quests.mapUnavailable}
+                  />
                 </>
               ) : null}
             </>
@@ -471,6 +522,14 @@ const sx = StyleSheet.create({
     overflow: 'hidden',
     ...hardShadow(3),
   },
+  mapPlaceholder: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    padding: 16,
+    backgroundColor: Brand.white,
+  },
+  mapHint: { fontSize: 13, color: Brand.inkFaint, fontStyle: 'italic', textAlign: 'center' },
 
   // DEV-only simulation panel.
   devPanel: {
