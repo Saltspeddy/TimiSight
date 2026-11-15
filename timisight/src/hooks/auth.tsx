@@ -7,6 +7,7 @@ import {
 import Constants from 'expo-constants';
 import * as WebBrowser from 'expo-web-browser';
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
+import { Platform } from 'react-native';
 
 import { resetCollectionForUserChange } from '@/constants/collection';
 import {
@@ -209,7 +210,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signIn = useCallback(async () => {
     if (!request) return; // Not ready until the PKCE verifier is generated.
     setIsLoading(true);
-    const result = await promptAsync();
+    // Auth0 keeps its login state in cookies set on /authorize and read again on
+    // /login. Samsung Internet (the default Custom Tab provider on Samsung phones) can
+    // lose them between the two, which gives Auth0's "we couldn't find your session"
+    // page. Use Chrome when it is installed; otherwise keep the device default.
+    let browserPackage: string | undefined;
+    if (Platform.OS === 'android') {
+      try {
+        const { browserPackages } = await WebBrowser.getCustomTabsSupportingBrowsersAsync();
+        if (browserPackages.includes('com.android.chrome')) browserPackage = 'com.android.chrome';
+      } catch {
+        // Fall back to the default browser.
+      }
+    }
+    const result = await promptAsync({ browserPackage });
     // A dismissed/cancelled prompt never reaches the response effect, so clear loading
     // here. A success is handled by the response effect above.
     if (result.type !== 'success') setIsLoading(false);

@@ -1,5 +1,6 @@
 import { useSyncExternalStore } from 'react';
 
+import { claimFriendBonuses } from '@/lib/friends';
 import { supabase } from '@/lib/supabase';
 
 // Per-user flower collection + points, backed by Supabase (Auth0 third-party auth).
@@ -193,11 +194,25 @@ export async function activateAndComplete(flowerId: string, pathIds: string[]): 
     console.warn('[collection] complete_daily_if_done failed:', e);
   }
 
+  // A path that just completed may match one a friend finished earlier: collect that bonus
+  // too. Never throws (see claimFriendBonuses), and does nothing for non-friends.
+  if ((await claimFriendBonuses()) > 0) awardedBonus = true;
+
   // Reconcile balance + lifetime from the DB once, only if a bonus landed.
   if (awardedBonus) {
     await reloadCollection();
   }
   return awardedBonus;
+}
+
+/**
+ * Collect any friend bonuses that are due (a friend finished a path you had finished, or you
+ * just became friends) and refresh the balance if points arrived. Returns the points added.
+ */
+export async function collectFriendBonuses(): Promise<number> {
+  const awarded = await claimFriendBonuses();
+  if (awarded > 0) await reloadCollection();
+  return awarded;
 }
 
 /**

@@ -14,6 +14,7 @@ import type { Lang, Tr } from '@/constants/site-data';
 import { useFlowers } from '@/hooks/use-flowers';
 import { useLang } from '@/hooks/use-lang';
 import { useProximity } from '@/hooks/use-proximity';
+import { InviteFriendButton } from '@/components/invite-friend';
 import { refreshQuests, useQuests, type PathQuest } from '@/hooks/use-quests';
 import type { Temperature } from '@/lib/geo';
 import { setSimulatedLocation, useSimulatedLocation } from '@/lib/location';
@@ -470,6 +471,9 @@ function PathCard({
         <Text style={sx.bonusLabel}>{t.quests.bonus}</Text>
         <Text style={sx.bonusValue}>{path.completionBonus} {t.points}</Text>
       </View>
+
+      {/* Do the path together: both friends must finish it to earn the shared bonus. */}
+      {!completed ? <InviteFriendButton pathId={path.id} pathName={name} /> : null}
 
       {completed ? (
         <Text style={sx.pathDone}>

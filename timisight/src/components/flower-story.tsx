@@ -11,12 +11,15 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Brand } from '@/constants/brand';
 import type { Flower } from '@/constants/flowers';
-import type { Lang } from '@/constants/site-data';
+import { LANG_CODES, type Lang } from '@/constants/site-data';
 import { STORIES } from '@/constants/stories';
 
 const TXT = {
   en: { subs: 'Subtitles', close: 'Close', video: '[Video goes here]', none: '[Add subtitles in constants/stories.ts]' },
   ro: { subs: 'Subtitrare', close: 'Închide', video: '[Aici apare videoul]', none: '[Adaugă subtitrarea în constants/stories.ts]' },
+  de: { subs: 'Untertitel', close: 'Schließen', video: '[Hier erscheint das Video]', none: '[Untertitel in constants/stories.ts ergänzen]' },
+  hu: { subs: 'Feliratok', close: 'Bezárás', video: '[Itt jelenik meg a videó]', none: '[Add hozzá a feliratokat: constants/stories.ts]' },
+  sr: { subs: 'Титлови', close: 'Затвори', video: '[Овде се приказује видео]', none: '[Додај титлове у constants/stories.ts]' },
 };
 const COLLAPSED = 84;
 
@@ -102,7 +105,7 @@ export function FlowerStory({ flower, lang, visible, onClose, video, currentTime
           {open && (
             <>
               <View style={s.tabs}>
-                {(['en', 'ro'] as Lang[]).map((l) => (
+                {LANG_CODES.map((l) => (
                   <Pressable key={l} onPress={() => setTr(l)} accessibilityRole="button" style={[s.tab, tr === l && s.tabOn]}>
                     <Text style={[s.tabText, tr === l && s.tabTextOn]}>{l.toUpperCase()}</Text>
                   </Pressable>
@@ -149,7 +152,7 @@ const s = StyleSheet.create({
   barRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   barTitle: { fontSize: 16, fontWeight: '800', color: '#fff' },
   preview: { fontSize: 15, fontStyle: 'italic', color: 'rgba(255,255,255,0.85)', marginTop: 4 },
-  tabs: { flexDirection: 'row', gap: 8, paddingHorizontal: 18, marginBottom: 8 },
+  tabs: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, paddingHorizontal: 18, marginBottom: 8 },
   tab: { borderWidth: 2, borderColor: '#fff', borderRadius: 99, paddingVertical: 4, paddingHorizontal: 14 },
   tabOn: { backgroundColor: '#fff' },
   tabText: { fontWeight: '800', color: '#fff' },

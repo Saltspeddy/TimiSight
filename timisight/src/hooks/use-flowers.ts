@@ -21,9 +21,11 @@ async function fetchFlowers() {
   if (inFlight) return inFlight;
   inFlight = (async () => {
     try {
+      // `*` (not a column list) so this keeps working whether or not the German /
+      // Hungarian / Serbian columns exist yet: naming a missing column is an error.
       const { data, error } = await supabase
         .from('flowers')
-        .select('id, name_en, name_ro, latin_name, place_en, place_ro, character_en, character_ro, color, points, lat, lng')
+        .select('*')
         .eq('active', true)
         .order('sort_order', { ascending: true });
 

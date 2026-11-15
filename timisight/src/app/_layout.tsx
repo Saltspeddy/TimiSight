@@ -1,10 +1,14 @@
 import { DarkTheme, DefaultTheme, Stack, ThemeProvider } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
-import { useColorScheme } from 'react-native';
+import { StyleSheet, useColorScheme, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
+import { useEffect } from 'react';
+
 import { AnimatedSplashOverlay } from '@/components/animated-icon';
+import { ChooseRole } from '@/components/choose-role';
 import { AuthProvider, useAuth } from '@/hooks/auth';
+import { resetRole, syncRole, useRole } from '@/hooks/use-role';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -16,7 +20,21 @@ SplashScreen.preventAutoHideAsync();
 // `useAuth()` and gate routes. Expo Router includes every route by default; the
 // `Stack.Protected` blocks carve out the authenticated-only and logged-out-only screens.
 function RootNavigator() {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
+  const sub = user?.sub;
+
+  // Once signed in, look this person's role up in the database. The app they see depends
+  // on it. Cleared on sign-out.
+  //
+  // NOTE: the route guards below depend ONLY on `isAuthenticated`, as they always did.
+  // Showing/hiding whole route groups based on the role lookup made Expo Router fail to
+  // build a starting screen and re-render forever ("Maximum update depth exceeded").
+  // The role question is an overlay instead (see SplashGate).
+  useEffect(() => {
+    if (sub) void syncRole();
+    else resetRole();
+  }, [sub]);
+
   return (
     <Stack screenOptions={{ headerShown: false }}>
       {/* Reachable only while authenticated. If the session drops (sign-out), these
@@ -25,6 +43,13 @@ function RootNavigator() {
       <Stack.Protected guard={isAuthenticated}>
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="place/[id]" options={{ presentation: 'card' }} />
+        {/* Artists and statue commissions. */}
+        <Stack.Screen name="artist/[sub]" options={{ presentation: 'card' }} />
+        <Stack.Screen name="artist-edit" options={{ presentation: 'card' }} />
+        {/* Friends list (visitors only: the screen redirects everyone else). */}
+        <Stack.Screen name="friends" options={{ presentation: 'card' }} />
+        <Stack.Screen name="commission/new" options={{ presentation: 'card' }} />
+        <Stack.Screen name="commission/[id]" options={{ presentation: 'card' }} />
       </Stack.Protected>
 
       {/* Reachable only while logged out. */}
@@ -61,11 +86,24 @@ export default function RootLayout() {
 // when it fires. `RootNavigator` always renders underneath so the correct guarded screen
 // is painted the moment the splash dissolves.
 function SplashGate() {
-  const { isLoading } = useAuth();
+  const { isLoading, isAuthenticated } = useAuth();
+  const { phase } = useRole();
+
+  // Signed in but this person's role isn't settled yet (still looking it up, none recorded
+  // on a first sign-in, or the lookup failed): cover the app with the "who are you joining
+  // as?" screen. It is drawn ON TOP of the navigator rather than being a route, so the
+  // router's own state never changes because of it. It goes away the moment the role is known.
+  const askingRole = isAuthenticated && phase !== 'ready';
+
   return (
     <>
       <AnimatedSplashOverlay ready={!isLoading} />
       <RootNavigator />
+      {askingRole ? (
+        <View style={StyleSheet.absoluteFill}>
+          <ChooseRole />
+        </View>
+      ) : null}
     </>
   );
 }

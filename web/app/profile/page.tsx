@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getMyPoints } from "@/lib/shop-db";
 import { signOut } from "../auth/actions";
+import { BrandLink } from "../brand";
 import "./profile.css";
 
 // This page reads the authenticated user's session at request time, so it
@@ -43,7 +44,7 @@ export default async function ProfilePage() {
     <div className="profile">
       <div className="profile-card">
         <div className="profile-top">
-          <Link className="profile-logo" href="/">UniPrep</Link>
+          <BrandLink className="profile-logo" />
           <form action={signOut}>
             <button className="profile-logout" type="submit">Log out</button>
           </form>

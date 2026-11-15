@@ -46,7 +46,7 @@ create policy "anyone reads active flowers" on flowers
   for select using (active);
 
 -- ---------------------------------------------------------------------------
--- Seed the two existing flowers (upsert, so re-running just refreshes content).
+-- Seed the flowers (upsert, so re-running just refreshes content).
 -- ---------------------------------------------------------------------------
 insert into flowers (id, name_en, name_ro, latin_name, place_en, place_ro, character_en, character_ro, color, points, sort_order)
 values

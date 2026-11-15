@@ -1,26 +1,37 @@
 import { Image } from 'expo-image';
-import { useFocusEffect } from 'expo-router';
+import { router, useFocusEffect } from 'expo-router';
 import { useCallback } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { LangToggle } from '@/components/lang-toggle';
+import { LanguagePicker } from '@/components/language-picker';
 import { BORDER, Brand, hardShadow } from '@/constants/brand';
-import { useCollection } from '@/constants/collection';
+import { collectFriendBonuses, useCollection } from '@/constants/collection';
+import { FC } from '@/constants/friends';
+import { RC, ROLE_STYLE } from '@/constants/roles';
 import { ME } from '@/constants/site-data';
 import { useAuth } from '@/hooks/auth';
 import { useLang } from '@/hooks/use-lang';
 import { refreshLeaderboard, useLeaderboard } from '@/hooks/use-leaderboard';
+import { useRole } from '@/hooks/use-role';
 
 const BOARD_EMPTY = {
   en: 'No points yet. Scan a flower to get on the board.',
   ro: 'Încă niciun punct. Scanează o floare ca să apari în clasament.',
+  de: 'Noch keine Punkte. Scanne eine Blume, um in die Rangliste zu kommen.',
+  hu: 'Még nincs pontod. Olvass be egy virágot, hogy felkerülj a ranglistára.',
+  sr: 'Још нема поена. Скенирај цвет да уђеш на ранг-листу.',
 };
 
 export default function AccountScreen() {
   const [lang, t] = useLang();
+  const c = RC[lang];
   const insets = useSafeAreaInsets();
   const { user, isLoading, signOut } = useAuth();
+  const { role, name: roleName, phase } = useRole();
+  // Points, rank and the leaderboard belong to visitors; organizations and artists have none.
+  const isVisitor = role === 'user' || role === null;
+  const roleLabel = { user: c.roleUser, organization: c.roleOrg, artist: c.roleArtist };
   // Real balance + lifetime from the unified ledger. balance = earned - spent (spendable);
   // lifetime = earned-only, so "Lifetime earned" no longer wrongly drops after a redemption.
   const { total, lifetime } = useCollection();
@@ -33,14 +44,19 @@ export default function AccountScreen() {
 
   // Re-read the ranking when the tab is focused so points earned elsewhere show up promptly
   // (the leaderboard now lives here instead of its own tab).
+  // Friends bonuses are collected here too, so points from a friend who finished a path
+  // after you show up without you having to open the Friends screen.
   useFocusEffect(
     useCallback(() => {
       void refreshLeaderboard();
-    }, []),
+      if (role === 'user') void collectFriendBonuses();
+    }, [role]),
   );
 
   // The signed-in display name falls back to the demo "You" when the profile omits it.
-  const displayName = user?.name ?? user?.email ?? ME.name;
+  // An organization or artist is shown by its own name, not by the email it signed in with.
+  // A visitor is shown by their nickname, not by the email they signed in with.
+  const displayName = roleName ?? user?.name ?? user?.email ?? ME.name;
 
   return (
     <View style={styles.root}>
@@ -58,16 +74,30 @@ export default function AccountScreen() {
           </View>
         ) : (
           <View style={styles.head}>
-            <View style={styles.avatar}>
-              {user?.picture ? (
+            {/* People are round; an organization is a rounded square. */}
+            <View
+              style={[
+                styles.avatar,
+                role === 'organization' && styles.avatarOrg,
+                role === 'artist' && { backgroundColor: ROLE_STYLE.artist.bg },
+              ]}>
+              {user?.picture && isVisitor ? (
                 <Image source={{ uri: user.picture }} style={styles.avatarImage} />
               ) : (
-                <Text style={styles.avatarText}>{displayName.charAt(0).toUpperCase()}</Text>
+                <Text style={[styles.avatarText, role === 'artist' && { color: ROLE_STYLE.artist.fg }]}>
+                  {displayName.charAt(0).toUpperCase()}
+                </Text>
               )}
             </View>
             <View style={styles.headText}>
-              <Text style={styles.name}>{displayName}</Text>
-              {user?.email ? <Text style={styles.email}>{user.email}</Text> : null}
+              <Text style={styles.name} numberOfLines={2}>{displayName}</Text>
+              {isVisitor && user?.email ? <Text style={styles.email}>{user.email}</Text> : null}
+              {/* Which kind of account this is, shown only once the database has said so. */}
+              {phase === 'ready' && role ? (
+                <View style={[styles.rolePill, { backgroundColor: ROLE_STYLE[role].bg }]}>
+                  <Text style={[styles.rolePillText, { color: ROLE_STYLE[role].fg }]}>{roleLabel[role]}</Text>
+                </View>
+              ) : null}
             </View>
           </View>
         )}
@@ -76,34 +106,52 @@ export default function AccountScreen() {
             layout's guard), so there is no logged-out branch here; signing out flips the
             guard and drops the user back to the login screen. */}
         {!isLoading && (
-          <Pressable style={styles.authBtn} onPress={() => void signOut()}>
-            <Text style={styles.authBtnText}>{t.authLogout}</Text>
-          </Pressable>
+          <View style={styles.actions}>
+            {role === 'user' ? (
+              <Pressable style={styles.editBtn} onPress={() => router.push('/friends')}>
+                <Text style={styles.editBtnText}>{FC[lang].accountButton}</Text>
+              </Pressable>
+            ) : null}
+            {role === 'artist' ? (
+              <Pressable style={styles.editBtn} onPress={() => router.push('/artist-edit')}>
+                <Text style={styles.editBtnText}>{c.accountEditArtist}</Text>
+              </Pressable>
+            ) : null}
+            <Pressable style={styles.authBtn} onPress={() => void signOut()}>
+              <Text style={styles.authBtnText}>{t.authLogout}</Text>
+            </Pressable>
+          </View>
         )}
 
-        {/* Points balance banner */}
-        <View style={styles.banner}>
-          <Text style={styles.bannerLabel}>{t.accountBalance}</Text>
-          <Text style={styles.bannerValue}>
-            {total} {t.points}
-          </Text>
-        </View>
+        {/* Points balance banner (visitors only) */}
+        {isVisitor ? (
+          <View style={styles.banner}>
+            <Text style={styles.bannerLabel}>{t.accountBalance}</Text>
+            <Text style={styles.bannerValue}>
+              {total} {t.points}
+            </Text>
+          </View>
+        ) : null}
 
         {/* Details */}
         <View style={styles.details}>
-          <View style={styles.row}>
-            <Text style={styles.dt}>{t.accountLifetime}</Text>
-            <Text style={styles.dd}>
-              {lifetime} {t.points}
-            </Text>
-          </View>
-          <View style={styles.row}>
-            <Text style={styles.dt}>{t.accountRank}</Text>
-            <Text style={styles.dd}>{rank > 0 ? `#${rank}` : '—'}</Text>
-          </View>
+          {isVisitor ? (
+            <>
+              <View style={styles.row}>
+                <Text style={styles.dt}>{t.accountLifetime}</Text>
+                <Text style={styles.dd}>
+                  {lifetime} {t.points}
+                </Text>
+              </View>
+              <View style={styles.row}>
+                <Text style={styles.dt}>{t.accountRank}</Text>
+                <Text style={styles.dd}>{rank > 0 ? `#${rank}` : '—'}</Text>
+              </View>
+            </>
+          ) : null}
           <View style={[styles.row, styles.rowLast]}>
             <Text style={styles.dt}>{t.accountLanguage}</Text>
-            <LangToggle />
+            <LanguagePicker />
           </View>
         </View>
 
@@ -157,6 +205,28 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   avatarImage: { width: '100%', height: '100%' },
+  avatarOrg: { borderRadius: 18 },
+  rolePill: {
+    alignSelf: 'flex-start',
+    marginTop: 8,
+    borderWidth: 2,
+    borderColor: Brand.ink,
+    borderRadius: 99,
+    paddingVertical: 3,
+    paddingHorizontal: 12,
+  },
+  rolePillText: { fontSize: 13, fontWeight: '800' },
+  actions: { flexDirection: 'row', flexWrap: 'wrap', gap: 12, marginBottom: 20 },
+  editBtn: {
+    backgroundColor: Brand.yellow,
+    borderWidth: BORDER,
+    borderColor: Brand.ink,
+    borderRadius: 10,
+    paddingVertical: 12,
+    paddingHorizontal: 18,
+    ...hardShadow(4),
+  },
+  editBtnText: { color: Brand.ink, fontSize: 16, fontWeight: '800' },
   avatarText: { color: '#fff', fontSize: 30, fontWeight: '800' },
   name: { fontSize: 22, fontWeight: '800', color: Brand.ink },
   email: { fontSize: 14, color: Brand.inkFaint, marginTop: 2 },

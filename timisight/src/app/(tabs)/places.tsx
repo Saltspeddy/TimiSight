@@ -1,8 +1,9 @@
-import { Image } from 'expo-image';
 import { router } from 'expo-router';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { FlowerCard } from '@/components/flower-card';
+import { FlowerIcon } from '@/components/flower-icon';
 import { evaluateBadges } from '@/constants/badges';
 import { BORDER, Brand, hardShadow } from '@/constants/brand';
 import { useCollection } from '@/constants/collection';
@@ -12,20 +13,29 @@ import { useQuests } from '@/hooks/use-quests';
 
 const TXT = {
   en: {
-    title: 'Garden',
-    flowers: 'flowers',
-    find: 'Find it in the city',
-    badges: 'Badges',
+    title: 'Garden', flowers: 'flowers', find: 'Find it in the city', badges: 'Badges',
     simTitle: 'Simulate a scan (demo)',
     simHint: 'Stands in for tapping a physical NFC tag. Opens the flower as if scanned.',
   },
   ro: {
-    title: 'Grădina',
-    flowers: 'flori',
-    find: 'Găsește-o în oraș',
-    badges: 'Insigne',
+    title: 'Grădina', flowers: 'flori', find: 'Găsește-o în oraș', badges: 'Insigne',
     simTitle: 'Simulează o scanare (demo)',
     simHint: 'Înlocuiește atingerea unei etichete NFC fizice. Deschide floarea ca și cum ar fi scanată.',
+  },
+  de: {
+    title: 'Garten', flowers: 'Blumen', find: 'Finde sie in der Stadt', badges: 'Abzeichen',
+    simTitle: 'Scan simulieren (Demo)',
+    simHint: 'Ersetzt das Antippen eines echten NFC-Tags. Öffnet die Blume, als wäre sie gescannt worden.',
+  },
+  hu: {
+    title: 'Kert', flowers: 'virág', find: 'Keresd meg a városban', badges: 'Jelvények',
+    simTitle: 'Beolvasás szimulálása (demo)',
+    simHint: 'Egy valódi NFC-címke megérintését helyettesíti. Úgy nyitja meg a virágot, mintha beolvasták volna.',
+  },
+  sr: {
+    title: 'Врт', flowers: 'цветова', find: 'Пронађи га у граду', badges: 'Значке',
+    simTitle: 'Симулирај скенирање (демо)',
+    simHint: 'Замењује додир праве NFC ознаке. Отвара цвет као да је скениран.',
   },
 };
 
@@ -51,16 +61,10 @@ export default function GardenScreen() {
       <View style={s.grid}>
         {flowers.map((f) =>
           owned.includes(f.id) ? (
-            <Pressable key={f.id} onPress={() => router.push(`/place/${f.id}`)} accessibilityRole="button"
-              accessibilityLabel={f.name[lang]} style={({ pressed }) => [s.card, pressed && s.pressed]}>
-              <View style={[s.thumb, { backgroundColor: f.color }]}>
-                {f.image ? <Image source={f.image} style={StyleSheet.absoluteFill} contentFit="contain" /> : null}
-              </View>
-              <Text style={s.name} numberOfLines={2}>{f.name[lang]}</Text>
-            </Pressable>
+            <FlowerCard key={f.id} flower={f} lang={lang} />
           ) : (
             <View key={f.id} style={[s.card, s.locked]}>
-              <Text style={s.q}>?</Text>
+              <FlowerIcon flower={f} locked size={84} />
               <Text style={s.lockText}>{x.find}</Text>
             </View>
           ),
@@ -114,10 +118,7 @@ const s = StyleSheet.create({
   // last row keeps its size instead of stretching to fill the whole row.
   card: { width: '47%', backgroundColor: Brand.white, borderWidth: BORDER, borderColor: Brand.ink, borderRadius: 16, padding: 10, gap: 8, ...hardShadow(4) },
   pressed: { transform: [{ translateX: 2 }, { translateY: 2 }], ...hardShadow(2) },
-  thumb: { aspectRatio: 1, borderRadius: 12, borderWidth: 2, borderColor: Brand.ink, overflow: 'hidden' },
-  name: { fontSize: 16, fontWeight: '800', color: Brand.ink },
   locked: { borderStyle: 'dashed', alignItems: 'center', justifyContent: 'center', minHeight: 170, shadowOpacity: 0, elevation: 0, backgroundColor: 'transparent' },
-  q: { fontSize: 44, fontWeight: '800', color: Brand.inkFaint },
   lockText: { fontSize: 14, fontStyle: 'italic', color: Brand.inkFaint, textAlign: 'center' },
   badge: { width: '31%', alignItems: 'center', gap: 4, borderWidth: 2, borderColor: Brand.ink, borderRadius: 14, padding: 10 },
   badgeOn: { backgroundColor: Brand.yellow },

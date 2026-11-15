@@ -1,9 +1,9 @@
-import { Image } from 'expo-image';
 import { router } from 'expo-router';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import Animated, { FadeInDown, ZoomIn } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { FlowerIcon, tint } from '@/components/flower-icon';
 import { FlowerStory } from '@/components/flower-story';
 
 import { BORDER, Brand, hardShadow } from '@/constants/brand';
@@ -23,6 +23,18 @@ const TXT = {
     total: 'Total', pts: 'puncte', tap: 'Atinge eticheta NFC a acestei flori ca să faci check-in și să câștigi puncte.', sim: 'Simulează atingerea NFC (demo)',
     flower: 'Floarea', place: 'Locul', rewards: 'Recompense în apropiere', bouquet: 'Grădina ta',
     ranking: 'Clasamentul grădinii', notFound: 'Floarea nu a fost găsită' },
+  de: { watch: '▶ Geschichte ansehen', checked: 'Blume gesammelt', already: 'Schon in deinem Strauß', alreadySub: 'Jede Blume bringt nur einmal Punkte.',
+    total: 'Gesamt', pts: 'Punkte', tap: 'Halte dein Handy an den NFC-Tag dieser Blume, um sie zu sammeln und Punkte zu verdienen.', sim: 'NFC-Berührung simulieren (Demo)',
+    flower: 'Die Blume', place: 'Der Ort', rewards: 'Vorteile in der Nähe', bouquet: 'Dein Strauß',
+    ranking: 'Garten-Rangliste', notFound: 'Blume nicht gefunden' },
+  hu: { watch: '▶ A történet megtekintése', checked: 'Virág összegyűjtve', already: 'Már a csokrodban van', alreadySub: 'Minden virág csak egyszer ad pontot.',
+    total: 'Összesen', pts: 'pont', tap: 'Érintsd a telefonod a virág NFC-címkéjéhez, hogy összegyűjtsd, és pontokat szerezz.', sim: 'NFC-érintés szimulálása (demo)',
+    flower: 'A virág', place: 'A hely', rewards: 'Közeli kedvezmények', bouquet: 'A csokrod',
+    ranking: 'A kert ranglistája', notFound: 'A virág nem található' },
+  sr: { watch: '▶ Погледај причу', checked: 'Цвет је сакупљен', already: 'Већ је у твом букету', alreadySub: 'Сваки цвет доноси поене само једном.',
+    total: 'Укупно', pts: 'поена', tap: 'Принеси телефон NFC ознаци овог цвета да га сакупиш и зарадиш поене.', sim: 'Симулирај NFC додир (демо)',
+    flower: 'Цвет', place: 'Место', rewards: 'Погодности у близини', bouquet: 'Твој букет',
+    ranking: 'Ранг-листа врта', notFound: 'Цвет није пронађен' },
 };
 
 function Section({ title, children }: { title: string; children: ReactNode }) {
@@ -116,11 +128,8 @@ export function FlowerView({ id, scanned = false }: { id: string; scanned?: bool
 
         <Animated.View entering={ZoomIn.springify().damping(14)} style={[s.mat, { backgroundColor: flower.color }]}>
           <View style={s.photo}>
-            {flower.image ? (
-              <Image source={flower.image} style={StyleSheet.absoluteFill} contentFit="contain" />
-            ) : (
-              <Text style={s.placeholder}>[Photo]</Text>
-            )}
+            {/* The statue photo if there is one, else the illustrated icon, else a drawn bloom. */}
+            <FlowerIcon flower={flower} order={['photo', 'icon']} />
           </View>
         </Animated.View>
 
@@ -186,8 +195,9 @@ export function FlowerView({ id, scanned = false }: { id: string; scanned?: bool
         <Section title={x.bouquet}>
           <View style={s.dots}>
             {owned.map((f) => (
-              <View key={f!.id} style={[s.dot, { backgroundColor: f!.color }, f!.id === flower.id && s.dotCurrent]}>
-                <Text style={s.dotText}>{f!.name[lang][0]}</Text>
+              <View key={f!.id} style={[s.dot, { backgroundColor: tint(f!.color) }, f!.id === flower.id && s.dotCurrent]}>
+                {/* Icon only (a 1376px statue photo is unreadable at this size). */}
+                <FlowerIcon flower={f!} order={['icon']} size={32} />
               </View>
             ))}
           </View>
