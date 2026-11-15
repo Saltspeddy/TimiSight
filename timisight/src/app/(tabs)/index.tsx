@@ -5,11 +5,14 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { LanguagePicker } from '@/components/language-picker';
 import { BORDER, Brand, hardShadow } from '@/constants/brand';
+import { RC } from '@/constants/roles';
 import { TEAM } from '@/constants/site-data';
 import { useLang } from '@/hooks/use-lang';
+import { useRole } from '@/hooks/use-role';
 
 export default function HomeScreen() {
-  const [, t] = useLang();
+  const [lang, t] = useLang();
+  const { role } = useRole();
   const insets = useSafeAreaInsets();
 
   return (
@@ -48,10 +51,16 @@ export default function HomeScreen() {
           </View>
 
           <View style={styles.ctaRow}>
+            {/* The main button goes where this kind of account works: the garden for a
+                visitor, the artist directory for an organization, the inbox for an artist. */}
             <Pressable
-              onPress={() => router.navigate('/places')}
+              onPress={() =>
+                router.navigate(role === 'organization' ? '/artists' : role === 'artist' ? '/commissions' : '/places')
+              }
               style={({ pressed }) => [styles.btn, pressed && styles.btnPressed]}>
-              <Text style={styles.btnText}>{t.cta}</Text>
+              <Text style={styles.btnText}>
+                {role === 'organization' ? RC[lang].ctaOrg : role === 'artist' ? RC[lang].ctaArtist : t.cta}
+              </Text>
             </Pressable>
           </View>
         </View>

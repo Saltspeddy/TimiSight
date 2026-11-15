@@ -11,6 +11,9 @@ import { refreshLeaderboard, useLeaderboard } from '@/hooks/use-leaderboard';
 const EMPTY = {
   en: 'No points yet. Scan a flower to get on the board.',
   ro: 'Încă niciun punct. Scanează o floare ca să apari în clasament.',
+  de: 'Noch keine Punkte. Scanne eine Blume, um in die Rangliste zu kommen.',
+  hu: 'Még nincs pont. Olvass be egy virágot, hogy felkerülj a ranglistára.',
+  sr: 'Још нема поена. Скенирај цвет да би се појавио на ранг-листи.',
 };
 
 export default function LeaderboardScreen() {

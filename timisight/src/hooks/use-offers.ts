@@ -1,6 +1,6 @@
 import { useSyncExternalStore } from 'react';
 
-import { OFFERS, type Offer, type OfferKind } from '@/constants/site-data';
+import { LANG_CODES, OFFERS, type Lang, type Offer, type OfferKind } from '@/constants/site-data';
 import { supabase } from '@/lib/supabase';
 
 // Shop catalogue, fetched from the shared `offers` table (same pattern as use-flowers.ts).
@@ -28,11 +28,13 @@ type OfferRow = {
 const KINDS: OfferKind[] = ['repeatable', 'active'];
 const isOfferKind = (k: string | null): k is OfferKind => KINDS.includes(k as OfferKind);
 
-// Bilingual copy fallback: match a DB row to the bundled offer by its English title so
-// the Romanian translation is not lost (the DB stores only a scalar title).
-function bilingualTitle(enTitle: string): Record<'en' | 'ro', string> {
+// Translation fallback: match a DB row to the bundled offer by its English title so the
+// translations are not lost (the DB stores only a scalar title). An offer the app doesn't
+// know shows its one title in every language.
+function bilingualTitle(enTitle: string): Record<Lang, string> {
   const match = OFFERS.find((o) => o.title.en === enTitle);
-  return match ? match.title : { en: enTitle, ro: enTitle };
+  if (match) return match.title;
+  return Object.fromEntries(LANG_CODES.map((code) => [code, enTitle])) as Record<Lang, string>;
 }
 
 function rowToOffer(row: OfferRow): Offer {

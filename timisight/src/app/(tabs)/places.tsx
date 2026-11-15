@@ -1,5 +1,4 @@
-import { router, useFocusEffect } from 'expo-router';
-import { useCallback, useState } from 'react';
+import { router } from 'expo-router';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -11,11 +10,31 @@ import { useFlowers } from '@/hooks/use-flowers';
 import { useLang } from '@/hooks/use-lang';
 
 const TXT = {
-  en: { title: 'Garden', flowers: 'flowers', find: 'Find it in the city', badges: 'Badges' },
-  ro: { title: 'Grădina', flowers: 'flori', find: 'Găsește-o în oraș', badges: 'Insigne' },
-  de: { title: 'Garten', flowers: 'Blumen', find: 'Finde sie in der Stadt', badges: 'Abzeichen' },
-  hu: { title: 'Kert', flowers: 'virág', find: 'Keresd meg a városban', badges: 'Jelvények' },
-  sr: { title: 'Врт', flowers: 'цветова', find: 'Пронађи га у граду', badges: 'Значке' },
+  en: {
+    title: 'Garden', flowers: 'flowers', find: 'Find it in the city', badges: 'Badges',
+    simTitle: 'Simulate a scan (demo)',
+    simHint: 'Stands in for tapping a physical NFC tag. Opens the flower as if scanned.',
+  },
+  ro: {
+    title: 'Grădina', flowers: 'flori', find: 'Găsește-o în oraș', badges: 'Insigne',
+    simTitle: 'Simulează o scanare (demo)',
+    simHint: 'Înlocuiește atingerea unei etichete NFC fizice. Deschide floarea ca și cum ar fi scanată.',
+  },
+  de: {
+    title: 'Garten', flowers: 'Blumen', find: 'Finde sie in der Stadt', badges: 'Abzeichen',
+    simTitle: 'Scan simulieren (Demo)',
+    simHint: 'Ersetzt das Antippen eines echten NFC-Tags. Öffnet die Blume, als wäre sie gescannt worden.',
+  },
+  hu: {
+    title: 'Kert', flowers: 'virág', find: 'Keresd meg a városban', badges: 'Jelvények',
+    simTitle: 'Beolvasás szimulálása (demo)',
+    simHint: 'Egy valódi NFC-címke megérintését helyettesíti. Úgy nyitja meg a virágot, mintha beolvasták volna.',
+  },
+  sr: {
+    title: 'Врт', flowers: 'цветова', find: 'Пронађи га у граду', badges: 'Значке',
+    simTitle: 'Симулирај скенирање (демо)',
+    simHint: 'Замењује додир праве NFC ознаке. Отвара цвет као да је скениран.',
+  },
 };
 
 export default function GardenScreen() {
