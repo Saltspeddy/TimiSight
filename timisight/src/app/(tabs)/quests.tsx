@@ -178,17 +178,23 @@ class MapErrorBoundary extends Component<{ fallback: ReactNode; children: ReactN
   }
 }
 
+// Radius (metres) of the "general area" circle for the daily quest. We show a shaded circle
+// instead of an exact marker so the player sees roughly WHERE to look but still has to find
+// and scan the exact flower — the point of the quest. Keep in step with the zoom below.
+const DAILY_AREA_RADIUS_M = 50;
+
 /**
- * Daily-quest map pin. Android-only (expo-maps = Google Maps on Android); the project ships
- * Android only. Shows a single marker at the flower's GENERAL location — no hot/cold, no
- * precise guidance.
+ * Daily-quest area map. Android-only (expo-maps = Google Maps on Android); the project ships
+ * Android only. Shows a shaded CIRCLE (general area), not a precise pin, centred on the daily
+ * flower — guidance to the right area, not its exact spot.
  *
  * Renders nothing when there are no coordinates or not on Android. When no Maps key is baked
  * in (the pre-setup state), it shows a short hint instead of the map — see docs/maps-setup.md.
- * The native view is wrapped in an error boundary so a maps problem degrades to a placeholder
- * rather than crashing the tab.
+ * Pan/zoom gestures are enabled via uiSettings (the view is now a standalone block, not inside
+ * the collapsible, so the parent ScrollView no longer swallows the drag). The native view is
+ * wrapped in an error boundary so a JS-side maps problem degrades to a placeholder.
  */
-function DailyMap({ flower, title, hint }: { flower: Flower; title: string; hint: string }) {
+function DailyMap({ flower, hint }: { flower: Flower; hint: string }) {
   if (flower.lat == null || flower.lng == null) return null;
   if (Platform.OS !== 'android') return null; // Android-only build; no iOS map today.
 
@@ -201,7 +207,7 @@ function DailyMap({ flower, title, hint }: { flower: Flower; title: string; hint
     );
   }
 
-  const coordinates = { latitude: flower.lat, longitude: flower.lng };
+  const center = { latitude: flower.lat, longitude: flower.lng };
   return (
     <MapErrorBoundary
       fallback={
@@ -213,8 +219,22 @@ function DailyMap({ flower, title, hint }: { flower: Flower; title: string; hint
       <View style={sx.mapWrap}>
         <GoogleMaps.View
           style={StyleSheet.absoluteFill}
-          cameraPosition={{ coordinates, zoom: 15 }}
-          markers={[{ coordinates, title }]}
+          cameraPosition={{ coordinates: center, zoom: 16 }}
+          uiSettings={{
+            scrollGesturesEnabled: true,
+            zoomGesturesEnabled: true,
+            zoomControlsEnabled: true,
+            scrollGesturesEnabledDuringRotateOrZoom: true,
+          }}
+          circles={[
+            {
+              center,
+              radius: DAILY_AREA_RADIUS_M,
+              color: 'rgba(36,55,232,0.18)', // Brand.blue @ ~18% fill
+              lineColor: Brand.blue,
+              lineWidth: 2,
+            },
+          ]}
         />
       </View>
     </MapErrorBoundary>
@@ -309,24 +329,22 @@ export default function QuestsScreen() {
                 </View>
                 <Text style={sx.state}>{daily.collectedToday ? '✓' : '▶'}</Text>
               </Pressable>
-              {/* General map pin for the daily flower (no hot/cold — just where to look).
-                  Title + map are gated on the SAME condition (Android + coordinates present)
-                  so the "Where to look" header never dangles above an empty space. */}
-              {showDailyMap && dailyFlower ? (
-                <>
-                  <Text style={sx.mapTitle}>{t.quests.mapTitle}</Text>
-                  <DailyMap
-                    flower={dailyFlower}
-                    title={flowerName(daily.flowerId)}
-                    hint={t.quests.mapUnavailable}
-                  />
-                </>
-              ) : null}
             </>
           ) : (
             <Text style={sx.empty}>{t.quests.dailyEmpty}</Text>
           )}
         </Section>
+
+        {/* Daily-quest "where to look" map — a STANDALONE block between the two sections (not
+            inside the collapsible, so the parent ScrollView no longer steals the pan gesture).
+            Shows a general-area circle, not a precise pin. Gated on Android + coordinates so the
+            title never dangles above an empty space. */}
+        {showDailyMap && dailyFlower ? (
+          <View style={sx.mapBlock}>
+            <Text style={sx.mapTitle}>{t.quests.mapTitle}</Text>
+            <DailyMap flower={dailyFlower} hint={t.quests.mapUnavailable} />
+          </View>
+        ) : null}
 
         {/* Flower Paths — below. Shows a discovery hint until at least one path is activated. */}
         <Section title={t.quests.pathsTitle}>
@@ -514,7 +532,8 @@ const sx = StyleSheet.create({
   compass: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   compassText: { fontSize: 13, fontWeight: '800', color: Brand.ink },
 
-  // Daily-quest map.
+  // Daily-quest map (standalone block between the two sections).
+  mapBlock: { gap: 8 },
   mapTitle: { fontSize: 13, fontWeight: '800', color: Brand.inkFaint, marginTop: 4 },
   mapWrap: {
     height: 180,
