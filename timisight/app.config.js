@@ -23,6 +23,8 @@ module.exports = ({ config }) => {
     (p) => !(p === 'expo-maps' || (Array.isArray(p) && p[0] === 'expo-maps')),
   );
 
+  const hasGoogleMapsKey = GOOGLE_MAPS_ANDROID_KEY.trim().length > 0;
+
   return {
     ...config,
     android: {
@@ -31,6 +33,14 @@ module.exports = ({ config }) => {
         ...(config.android && config.android.config),
         googleMaps: { apiKey: GOOGLE_MAPS_ANDROID_KEY },
       },
+    },
+    extra: {
+      // Spread existing extra (auth0, EAS projectId, etc.) and add a reliable runtime flag:
+      // whether a Google Maps key was baked in. `extra` is always fully serialized into
+      // Constants.expoConfig.extra at runtime, unlike android.config, so the Quests screen
+      // can safely decide whether to mount the native map (which hard-crashes without a key).
+      ...(config.extra ?? {}),
+      hasGoogleMapsKey,
     },
     plugins: [
       ...basePlugins,

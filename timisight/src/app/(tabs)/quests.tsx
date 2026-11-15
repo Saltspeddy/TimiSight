@@ -153,15 +153,17 @@ function HotColdHint({
 }
 
 // Whether a Google Maps Android key was baked into the build (via app.config.js → .env).
-// Read from the resolved Expo config at runtime. Without a key, rendering GoogleMaps.View
-// shows nothing useful and can error, so we skip it and show a hint instead.
-const MAPS_KEY: string =
-  (Constants.expoConfig as any)?.android?.config?.googleMaps?.apiKey ?? '';
-const HAS_MAPS_KEY = MAPS_KEY.trim().length > 0;
+// Read from Constants.expoConfig.extra, which app.config.js sets reliably (the android.config
+// block is NOT reliably serialized into the runtime config, so we must NOT read the key path
+// directly). Without a key, GoogleMaps.View throws a NATIVE IllegalStateException that a React
+// error boundary cannot catch and that crashes the app — so this gate is the real safeguard.
+const HAS_MAPS_KEY = (Constants.expoConfig?.extra as any)?.hasGoogleMapsKey === true;
 
 /**
- * Error boundary around the native map. A native-view failure (module not in the dev build,
- * invalid key, etc.) must NEVER crash the whole Quests tab — it degrades to a placeholder.
+ * Error boundary around the native map. Catches JS-side render errors (e.g. the expo-maps
+ * module missing from a dev build) and degrades to a placeholder. NOTE: a missing API key
+ * throws a NATIVE IllegalStateException on the UI thread, which React cannot catch — the
+ * HAS_MAPS_KEY gate (not this boundary) is what prevents that crash.
  */
 class MapErrorBoundary extends Component<{ fallback: ReactNode; children: ReactNode }, { failed: boolean }> {
   state = { failed: false };
