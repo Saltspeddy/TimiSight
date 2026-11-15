@@ -11,6 +11,10 @@ export type Flower = {
   latinName?: string;
   about: L; // the character / story behind the flower
   place: { name: L; text: L };
+  // Real-world coordinates (from the `flowers` table; see web/supabase/flowers-geo.sql).
+  // Optional: a flower without coordinates gets no hot/cold hint and no map pin.
+  lat?: number;
+  lng?: number;
   rewards: Reward[];
 };
 
@@ -47,6 +51,8 @@ export type FlowerRow = {
   character_ro: string | null;
   color: string;
   points: number;
+  lat: number | null;
+  lng: number | null;
 };
 
 // Map a DB row into the Flower shape the UI already uses. `place.name` is not a
@@ -65,6 +71,8 @@ export function rowToFlower(r: FlowerRow): Flower {
       name: { en: '', ro: '' },
       text: { en: r.place_en ?? '', ro: r.place_ro ?? '' },
     },
+    lat: r.lat ?? undefined,
+    lng: r.lng ?? undefined,
     rewards: REWARDS,
   };
 }
@@ -119,6 +127,9 @@ export const FLOWERS: Flower[] = [
     image: FLOWER_IMAGES['casa-muhle'],
     name: { en: 'Casa Mühle', ro: 'Casa Mühle' },
     latinName: 'Rosa × hybrida',
+    // ⚠️ PLACEHOLDER coords — keep in sync with web/supabase/flowers-geo.sql.
+    lat: 45.7558,
+    lng: 21.229,
     about: {
       en: 'A garden rose from the house that taught Timișoara to grow roses — where every flower path begins.',
       ro: 'Un trandafir de grădină din casa care a învățat Timișoara să cultive trandafiri — de unde începe fiecare traseu floral.',
@@ -139,6 +150,9 @@ export const FLOWERS: Flower[] = [
     image: FLOWER_IMAGES['opera-rose'],
     name: { en: 'Opera Rose', ro: 'Trandafirul Operei' },
     latinName: 'Rosa',
+    // ⚠️ PLACEHOLDER coords — keep in sync with web/supabase/flowers-geo.sql.
+    lat: 45.7561,
+    lng: 21.2275,
     about: {
       en: 'A rose for the Opera House, carrying the music of the stage into the city’s gardens.',
       ro: 'Un trandafir pentru Operă, care poartă muzica scenei în grădinile orașului.',
@@ -159,6 +173,10 @@ export const FLOWERS: Flower[] = [
     image: FLOWER_IMAGES['miklosi-tulip'],
     name: { en: 'Miklósi Tulip', ro: 'Laleaua Miklósi' },
     latinName: 'Tulipa',
+    // ⚠️ PLACEHOLDER coords — keep in sync with web/supabase/flowers-geo.sql.
+    // Final (indoor) stop: hot/cold degrades to a "head inside" hint near here.
+    lat: 45.7549,
+    lng: 21.2281,
     about: {
       en: 'A tulip for Carol Miklósi, who set the city’s first trams rolling through the streets.',
       ro: 'O lalea pentru Carol Miklósi, cel care a pus primele tramvaie ale orașului în mișcare pe străzi.',
@@ -179,6 +197,9 @@ export const FLOWERS: Flower[] = [
     image: FLOWER_IMAGES['timisoreana-malt'],
     name: { en: 'Timișoreana Malt', ro: 'Malțul Timișoreana' },
     latinName: 'Hordeum vulgare',
+    // ⚠️ PLACEHOLDER coords — keep in sync with web/supabase/flowers-geo.sql.
+    lat: 45.7603,
+    lng: 21.2338,
     about: {
       en: 'A barley malt flower from the Timișoreana brewery, where the city’s oldest brewing tradition still ferments.',
       ro: 'O floare de malț de orz de la fabrica Timișoreana, unde cea mai veche tradiție a berii din oraș încă fermentează.',
