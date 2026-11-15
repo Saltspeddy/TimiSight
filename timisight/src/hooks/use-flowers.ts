@@ -23,7 +23,7 @@ async function fetchFlowers() {
     try {
       const { data, error } = await supabase
         .from('flowers')
-        .select('id, name_en, name_ro, latin_name, place_en, place_ro, character_en, character_ro, color, points')
+        .select('id, name_en, name_ro, latin_name, place_en, place_ro, character_en, character_ro, color, points, lat, lng')
         .eq('active', true)
         .order('sort_order', { ascending: true });
 
