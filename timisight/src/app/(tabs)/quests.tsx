@@ -194,7 +194,17 @@ const DAILY_AREA_RADIUS_M = 50;
  * the collapsible, so the parent ScrollView no longer swallows the drag). The native view is
  * wrapped in an error boundary so a JS-side maps problem degrades to a placeholder.
  */
-function DailyMap({ flower, hint }: { flower: Flower; hint: string }) {
+function DailyMap({
+  flower,
+  hint,
+  onInteractStart,
+  onInteractEnd,
+}: {
+  flower: Flower;
+  hint: string;
+  onInteractStart?: () => void;
+  onInteractEnd?: () => void;
+}) {
   if (flower.lat == null || flower.lng == null) return null;
   if (Platform.OS !== 'android') return null; // Android-only build; no iOS map today.
 
@@ -216,7 +226,12 @@ function DailyMap({ flower, hint }: { flower: Flower; hint: string }) {
           <Text style={sx.mapHint}>{hint}</Text>
         </View>
       }>
-      <View style={sx.mapWrap}>
+      {/* Touch on the map → freeze page scroll so the map owns the drag; release → resume. */}
+      <View
+        style={sx.mapWrap}
+        onTouchStart={onInteractStart}
+        onTouchEnd={onInteractEnd}
+        onTouchCancel={onInteractEnd}>
         <GoogleMaps.View
           style={StyleSheet.absoluteFill}
           cameraPosition={{ coordinates: center, zoom: 16 }}
@@ -306,9 +321,15 @@ export default function QuestsScreen() {
   // catalogue of not-yet-unlocked paths.
   const activePaths = paths.filter((p) => p.activated);
 
+  // Let the map take over vertical drags: while a finger is on the map we disable page
+  // scrolling (otherwise the ScrollView and the map fight over the same gesture), and
+  // re-enable it when the touch lifts. See <DailyMap/>'s onTouchStart/End wiring.
+  const [scrollEnabled, setScrollEnabled] = useState(true);
+
   return (
     <View style={sx.root}>
       <ScrollView
+        scrollEnabled={scrollEnabled}
         contentContainerStyle={{ padding: 20, paddingTop: insets.top + 20, paddingBottom: 100, gap: 16 }}
         showsVerticalScrollIndicator={false}>
         <Text style={sx.h1}>{t.quests.title}</Text>
@@ -344,7 +365,12 @@ export default function QuestsScreen() {
         {showDailyMap && dailyFlower ? (
           <View style={sx.mapBlock}>
             <Text style={sx.mapTitle}>{t.quests.mapTitle}</Text>
-            <DailyMap flower={dailyFlower} hint={t.quests.mapUnavailable} />
+            <DailyMap
+              flower={dailyFlower}
+              hint={t.quests.mapUnavailable}
+              onInteractStart={() => setScrollEnabled(false)}
+              onInteractEnd={() => setScrollEnabled(true)}
+            />
           </View>
         ) : null}
 
