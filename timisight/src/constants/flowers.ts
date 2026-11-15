@@ -13,6 +13,10 @@ export type Flower = {
   latinName?: string;
   about: L; // the character / story behind the flower
   place: { name: L; text: L };
+  // Real-world coordinates (from the `flowers` table; see web/supabase/flowers-geo.sql).
+  // Optional: a flower without coordinates gets no hot/cold hint and no map pin.
+  lat?: number;
+  lng?: number;
   rewards: Reward[];
   artistSub?: string; // Auth0 sub of the artist who made it (flowers.artist_sub), if linked
   orgSub?: string; // Auth0 sub of the organization it was made for (flowers.org_sub), if linked
@@ -39,6 +43,10 @@ export const FLOWER_IMAGES: Record<string, number> = {
   'opera-rose': require('../../assets/images/violinist-rose.png'),
   // The tram flower statue, by the Miklósi museum.
   'miklosi-tulip': require('../../assets/images/tram-flower.jpg'),
+  // TODO: replace with real artwork
+  'casa-muhle': require('../../assets/images/violinist-rose.png'),
+  // TODO: replace with real artwork
+  'timisoreana-malt': require('../../assets/images/violinist-rose.png'),
 };
 
 // Shape of a row from the `flowers` table (see web/supabase/flowers.sql and
@@ -58,6 +66,8 @@ export type FlowerRow = {
   points: number;
   artist_sub?: string | null; // added by web/supabase/artist-works.sql
   org_sub?: string | null; // added by web/supabase/artist-works.sql
+  lat: number | null;
+  lng: number | null;
 } & Partial<Record<`${'name' | 'place' | 'character'}_${Exclude<Lang, 'en' | 'ro'>}`, string | null>>;
 
 const BLANK: L = { en: '', ro: '', de: '', hu: '', sr: '' };
@@ -88,11 +98,17 @@ export function rowToFlower(r: FlowerRow): Flower {
     latinName: r.latin_name ?? undefined,
     about: localized(r, 'character'),
     place: { name: BLANK, text: localized(r, 'place') },
+    lat: r.lat ?? undefined,
+    lng: r.lng ?? undefined,
     rewards: REWARDS,
     artistSub: r.artist_sub ?? undefined,
     orgSub: r.org_sub ?? undefined,
   };
 }
+
+// Fallback text written in English and Romanian only: German, Hungarian and Serbian show the
+// English until the database rows (or a translator) provide them. Same rule as localized().
+const twoLangs = (en: string, ro: string): L => ({ en, ro, de: en, hu: en, sr: en });
 
 // ✏️ FALLBACK DATA: used when the database is unreachable or the flowers table
 // is empty, so the app still works offline / before the table is seeded. The
@@ -160,6 +176,99 @@ export const FLOWERS: Flower[] = [
         hu: 'A régi sörfőzdék negyedének közelében – főhajtás a város sörfőzési múltja előtt.',
         sr: 'Близу старог кварта пивара – наклон историји пиварства у граду.',
       },
+    },
+    rewards: REWARDS,
+  },
+  {
+    id: 'casa-muhle',
+    color: '#e86a8e',
+    points: 50,
+    image: FLOWER_IMAGES['casa-muhle'],
+    name: twoLangs('Casa Mühle', 'Casa Mühle'),
+    latinName: 'Rosa × hybrida',
+    // ⚠️ PLACEHOLDER coords — keep in sync with web/supabase/flowers-geo.sql.
+    lat: 45.7558,
+    lng: 21.229,
+    about: twoLangs(
+      'A garden rose from the house that taught Timișoara to grow roses — where every flower path begins.',
+      'Un trandafir de grădină din casa care a învățat Timișoara să cultive trandafiri — de unde începe fiecare traseu floral.',
+    ),
+    place: {
+      name: BLANK,
+      text: twoLangs(
+        'Casa Mühle — the historic Mühle house and flower shop, the starting point of the city’s flower routes.',
+        'Casa Mühle — casa și florăria istorică Mühle, punctul de pornire al traseelor florale ale orașului.',
+      ),
+    },
+    rewards: REWARDS,
+  },
+  {
+    id: 'opera-rose',
+    color: '#c0392b',
+    points: 50,
+    image: FLOWER_IMAGES['opera-rose'],
+    name: twoLangs('Opera Rose', 'Trandafirul Operei'),
+    latinName: 'Rosa',
+    // ⚠️ PLACEHOLDER coords — keep in sync with web/supabase/flowers-geo.sql.
+    lat: 45.7561,
+    lng: 21.2275,
+    about: twoLangs(
+      'A rose for the Opera House, carrying the music of the stage into the city’s gardens.',
+      'Un trandafir pentru Operă, care poartă muzica scenei în grădinile orașului.',
+    ),
+    place: {
+      name: BLANK,
+      text: twoLangs(
+        'The Opera House — Romanian National Opera Timișoara, in Victory Square.',
+        'Opera — Opera Națională Română Timișoara, în Piața Victoriei.',
+      ),
+    },
+    rewards: REWARDS,
+  },
+  {
+    id: 'miklosi-tulip',
+    color: '#f1c40f',
+    points: 50,
+    image: FLOWER_IMAGES['miklosi-tulip'],
+    name: twoLangs('Miklósi Tulip', 'Laleaua Miklósi'),
+    latinName: 'Tulipa',
+    // ⚠️ PLACEHOLDER coords — keep in sync with web/supabase/flowers-geo.sql.
+    // Final (indoor) stop: hot/cold degrades to a "head inside" hint near here.
+    lat: 45.7549,
+    lng: 21.2281,
+    about: twoLangs(
+      'A tulip for Carol Miklósi, who set the city’s first trams rolling through the streets.',
+      'O lalea pentru Carol Miklósi, cel care a pus primele tramvaie ale orașului în mișcare pe străzi.',
+    ),
+    place: {
+      name: BLANK,
+      text: twoLangs(
+        'Carol Miklósi Tram Museum — the city’s tram museum, honouring its public transport pioneer.',
+        'Muzeul Tramvaielor Carol Miklósi — muzeul tramvaielor orașului, în cinstea pionierului transportului public.',
+      ),
+    },
+    rewards: REWARDS,
+  },
+  {
+    id: 'timisoreana-malt',
+    color: '#d4a017',
+    points: 50,
+    image: FLOWER_IMAGES['timisoreana-malt'],
+    name: twoLangs('Timișoreana Malt', 'Malțul Timișoreana'),
+    latinName: 'Hordeum vulgare',
+    // ⚠️ PLACEHOLDER coords — keep in sync with web/supabase/flowers-geo.sql.
+    lat: 45.7603,
+    lng: 21.2338,
+    about: twoLangs(
+      'A barley malt flower from the Timișoreana brewery, where the city’s oldest brewing tradition still ferments.',
+      'O floare de malț de orz de la fabrica Timișoreana, unde cea mai veche tradiție a berii din oraș încă fermentează.',
+    ),
+    place: {
+      name: BLANK,
+      text: twoLangs(
+        'The Timișoreana brewery — the oldest brewery in Romania, rooted in Timișoara since 1718.',
+        'Fabrica Timișoreana — cea mai veche fabrică de bere din România, în Timișoara din 1718.',
+      ),
     },
     rewards: REWARDS,
   },

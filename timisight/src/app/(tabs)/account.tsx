@@ -1,8 +1,8 @@
 import { Image } from 'expo-image';
+import { router, useFocusEffect } from 'expo-router';
+import { useCallback } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-
-import { router } from 'expo-router';
 
 import { LanguagePicker } from '@/components/language-picker';
 import { BORDER, Brand, hardShadow } from '@/constants/brand';
@@ -11,8 +11,16 @@ import { RC, ROLE_STYLE } from '@/constants/roles';
 import { ME } from '@/constants/site-data';
 import { useAuth } from '@/hooks/auth';
 import { useLang } from '@/hooks/use-lang';
-import { useLeaderboard } from '@/hooks/use-leaderboard';
+import { refreshLeaderboard, useLeaderboard } from '@/hooks/use-leaderboard';
 import { useRole } from '@/hooks/use-role';
+
+const BOARD_EMPTY = {
+  en: 'No points yet. Scan a flower to get on the board.',
+  ro: 'Încă niciun punct. Scanează o floare ca să apari în clasament.',
+  de: 'Noch keine Punkte. Scanne eine Blume, um in die Rangliste zu kommen.',
+  hu: 'Még nincs pontod. Olvass be egy virágot, hogy felkerülj a ranglistára.',
+  sr: 'Још нема поена. Скенирај цвет да уђеш на ранг-листу.',
+};
 
 export default function AccountScreen() {
   const [lang, t] = useLang();
@@ -23,14 +31,23 @@ export default function AccountScreen() {
   // Points, rank and the leaderboard belong to visitors; organizations and artists have none.
   const isVisitor = role === 'user' || role === null;
   const roleLabel = { user: c.roleUser, organization: c.roleOrg, artist: c.roleArtist };
-  // Real balance from the unified ledger (same points earned by scanning flowers).
-  const { total } = useCollection();
+  // Real balance + lifetime from the unified ledger. balance = earned - spent (spendable);
+  // lifetime = earned-only, so "Lifetime earned" no longer wrongly drops after a redemption.
+  const { total, lifetime } = useCollection();
 
   // Real rank from the DB leaderboard: the signed-in user's position in the ranking.
   // `useLeaderboard` is ordered by lifetime desc, so the index is the rank. 0 (not found)
   // means the user has no points yet → shown as '—'.
   const ranked = useLeaderboard();
   const rank = user ? ranked.findIndex((r) => r.sub === user.sub) + 1 : 0;
+
+  // Re-read the ranking when the tab is focused so points earned elsewhere show up promptly
+  // (the leaderboard now lives here instead of its own tab).
+  useFocusEffect(
+    useCallback(() => {
+      void refreshLeaderboard();
+    }, []),
+  );
 
   // The signed-in display name falls back to the demo "You" when the profile omits it.
   // An organization or artist is shown by its own name, not by the email it signed in with.
@@ -114,7 +131,7 @@ export default function AccountScreen() {
               <View style={styles.row}>
                 <Text style={styles.dt}>{t.accountLifetime}</Text>
                 <Text style={styles.dd}>
-                  {total} {t.points}
+                  {lifetime} {t.points}
                 </Text>
               </View>
               <View style={styles.row}>
@@ -128,6 +145,33 @@ export default function AccountScreen() {
             <LanguagePicker />
           </View>
         </View>
+
+        {/* Leaderboard — relocated here from its own tab. Same useLeaderboard() ranking,
+            highlighting the signed-in row. */}
+        <Text style={styles.boardTitle}>{t.boardTitle}</Text>
+        <Text style={styles.boardSub}>{t.boardText}</Text>
+        {ranked.length === 0 ? (
+          <View style={styles.emptyBox}>
+            <Text style={styles.emptyText}>{BOARD_EMPTY[lang]}</Text>
+          </View>
+        ) : (
+          <View style={styles.list}>
+            {ranked.map((row, i) => {
+              const me = !!user && row.sub === user.sub;
+              return (
+                <View key={row.sub} style={[styles.boardRow, me && styles.me]}>
+                  <View style={styles.boardRank}>
+                    <Text style={styles.boardRankText}>{i + 1}</Text>
+                  </View>
+                  <Text style={styles.boardName} numberOfLines={1}>{row.name}</Text>
+                  <Text style={styles.boardPoints}>
+                    {row.lifetime} {t.points}
+                  </Text>
+                </View>
+              );
+            })}
+          </View>
+        )}
       </ScrollView>
     </View>
   );
@@ -228,4 +272,17 @@ const styles = StyleSheet.create({
   rowLast: { borderBottomWidth: 0 },
   dt: { fontSize: 15, fontWeight: '800', color: Brand.ink },
   dd: { fontSize: 15, color: Brand.inkSoft },
+
+  // Relocated leaderboard section.
+  boardTitle: { fontSize: 22, fontWeight: '800', color: Brand.ink, letterSpacing: -0.5, marginTop: 28, marginBottom: 6 },
+  boardSub: { fontSize: 15, color: Brand.inkFaint, marginBottom: 16, fontStyle: 'italic' },
+  list: { gap: 10 },
+  emptyBox: { borderWidth: 2, borderColor: Brand.inkFaint, borderStyle: 'dashed', borderRadius: 12, padding: 16 },
+  emptyText: { fontSize: 14, color: Brand.inkFaint, fontStyle: 'italic' },
+  boardRow: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 12, borderWidth: 2, borderColor: Brand.ink, borderRadius: 10, backgroundColor: '#fff' },
+  me: { backgroundColor: Brand.yellow },
+  boardRank: { width: 28, height: 28, borderRadius: 14, backgroundColor: Brand.blue, alignItems: 'center', justifyContent: 'center' },
+  boardRankText: { color: '#fff', fontWeight: '800', fontSize: 13 },
+  boardName: { flex: 1, fontWeight: '800', color: Brand.ink, fontSize: 15 },
+  boardPoints: { fontWeight: '800', color: Brand.ink, fontSize: 15 },
 });

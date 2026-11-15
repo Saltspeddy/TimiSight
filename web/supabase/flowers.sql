@@ -70,15 +70,48 @@ values
     'O floare de hamei care își amintește fabricile de bere și viața pe care o susțineau.',
     '#9fd56b', 50, 2
   ),
+  -- -------------------------------------------------------------------------
+  -- Quest flowers (flower paths + daily quests). Added in Phase 0.
+  -- -------------------------------------------------------------------------
   (
-    'tram-flower',
-    'Tram Flower', 'Floarea din tramvai',
-    null,
-    'Placed near the Miclosi museum, where the city''s history is kept indoors and the tram flowers keep it moving outside.',
-    'Amplasată lângă muzeul Miclosi, unde istoria orașului stă la adăpost înăuntru, iar florile din tramvai o țin în mișcare afară.',
-    'One flower pushes another along on a tram, a small story about helping a friend along the way.',
-    'O floare împinge o altă floare într-un tramvai, o mică poveste despre ajutorul dat unui prieten pe drum.',
-    '#6cb4e4', 50, 3
+    'casa-muhle',
+    'Casa Mühle', 'Casa Mühle',
+    'Rosa × hybrida',
+    'Casa Mühle — the historic Mühle house and flower shop, the starting point of the city''s flower routes.',
+    'Casa Mühle — casa și florăria istorică Mühle, punctul de pornire al traseelor florale ale orașului.',
+    'A garden rose from the house that taught Timișoara to grow roses — where every flower path begins.',
+    'Un trandafir de grădină din casa care a învățat Timișoara să cultive trandafiri — de unde începe fiecare traseu floral.',
+    '#e86a8e', 50, 3
+  ),
+  (
+    'opera-rose',
+    'Opera Rose', 'Trandafirul Operei',
+    'Rosa',
+    'The Opera House — Romanian National Opera Timișoara, in Victory Square.',
+    'Opera — Opera Națională Română Timișoara, în Piața Victoriei.',
+    'A rose for the Opera House, carrying the music of the stage into the city''s gardens.',
+    'Un trandafir pentru Operă, care poartă muzica scenei în grădinile orașului.',
+    '#c0392b', 50, 4
+  ),
+  (
+    'miklosi-tulip',
+    'Miklósi Tulip', 'Laleaua Miklósi',
+    'Tulipa',
+    'Carol Miklósi Tram Museum — the city''s tram museum, honouring its public transport pioneer.',
+    'Muzeul Tramvaielor Carol Miklósi — muzeul tramvaielor orașului, în cinstea pionierului transportului public.',
+    'A tulip for Carol Miklósi, who set the city''s first trams rolling through the streets.',
+    'O lalea pentru Carol Miklósi, cel care a pus primele tramvaie ale orașului în mișcare pe străzi.',
+    '#f1c40f', 50, 5
+  ),
+  (
+    'timisoreana-malt',
+    'Timișoreana Malt', 'Malțul Timișoreana',
+    'Hordeum vulgare',
+    'The Timișoreana brewery — the oldest brewery in Romania, rooted in Timișoara since 1718.',
+    'Fabrica Timișoreana — cea mai veche fabrică de bere din România, în Timișoara din 1718.',
+    'A barley malt flower from the Timișoreana brewery, where the city''s oldest brewing tradition still ferments.',
+    'O floare de malț de orz de la fabrica Timișoreana, unde cea mai veche tradiție a berii din oraș încă fermentează.',
+    '#d4a017', 50, 6
   )
 on conflict (id) do update set
   name_en = excluded.name_en,

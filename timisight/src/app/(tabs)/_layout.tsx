@@ -50,9 +50,9 @@ export default function TabsLayout() {
         <Icon src={<VectorIcon family={MaterialIcons} name="shopping-cart" />} />
       </NativeTabs.Trigger>
 
-      <NativeTabs.Trigger name="leaderboard" hidden={!isUser}>
-        <Label>{t.tabs.board}</Label>
-        <Icon src={<VectorIcon family={MaterialIcons} name="leaderboard" />} />
+      <NativeTabs.Trigger name="quests" hidden={!isUser}>
+        <Label>{t.tabs.quests}</Label>
+        <Icon src={<VectorIcon family={MaterialIcons} name="map" />} />
       </NativeTabs.Trigger>
 
       <NativeTabs.Trigger name="artists" hidden={!isOrg}>

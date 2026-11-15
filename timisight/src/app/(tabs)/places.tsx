@@ -9,6 +9,7 @@ import { BORDER, Brand, hardShadow } from '@/constants/brand';
 import { useCollection } from '@/constants/collection';
 import { useFlowers } from '@/hooks/use-flowers';
 import { useLang } from '@/hooks/use-lang';
+import { useQuests } from '@/hooks/use-quests';
 
 const TXT = {
   en: {
@@ -46,8 +47,10 @@ export default function GardenScreen() {
   // old useFocusEffect re-read hack is no longer needed.
   const collection = useCollection();
   const flowers = useFlowers();
+  const { paths } = useQuests();
   const owned = collection.collectedIds;
-  const badges = evaluateBadges(owned, collection.total, flowers.length);
+  const completedPathCount = paths.filter((p) => p.completedAt).length;
+  const badges = evaluateBadges(owned, collection.total, flowers.length, completedPathCount);
 
   return (
     <ScrollView style={{ backgroundColor: Brand.paper }}
