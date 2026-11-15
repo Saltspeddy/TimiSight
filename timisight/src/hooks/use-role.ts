@@ -11,7 +11,8 @@ import { supabase } from '@/lib/supabase';
 // answer with set_my_role. Anyone who already has a role goes straight into the app.
 //
 //   idle / loading  we don't know yet
-//   choose          signed in, no role recorded yet: ask
+//   choose          signed in and we need an answer: no role recorded yet (role is null), or a
+//                   visitor who hasn't picked a nickname yet (role is 'user'): ask
 //   ready           role known
 //   error           the lookup failed (offline, or the roles SQL hasn't been run). The app
 //                   stays usable as a visitor and says so, rather than failing silently.
@@ -19,7 +20,7 @@ import { supabase } from '@/lib/supabase';
 export type RoleState = {
   phase: 'idle' | 'loading' | 'choose' | 'ready' | 'error';
   role: Role | null;
-  /** Organization or artist name; null for visitors. */
+  /** Organization or artist name, or a visitor's nickname. Null until one is chosen. */
   name: string | null;
   error: string | null;
 };
@@ -89,6 +90,9 @@ export async function syncRole() {
     const row = await readOwnRole();
     if (mine !== generation) return; // signed out or re-synced in the meantime
     if (!row) set({ phase: 'choose', role: null, name: null, error: null });
+    // A visitor must have a nickname (the leaderboard and friends list show it, not their
+    // email). Existing visitors from before nicknames are asked once.
+    else if (row.role === 'user' && !row.display_name) set({ phase: 'choose', role: 'user', name: null, error: null });
     else set({ phase: 'ready', role: row.role, name: row.display_name, error: null });
   } catch (e) {
     if (mine !== generation) return;
@@ -101,25 +105,51 @@ export async function syncRole() {
  * Record the choice made on the "who are you joining as?" screen. Resolves to null on
  * success (the app then moves on by itself), or an error message to show.
  * The database refuses a missing name and ignores a second attempt: a role is permanent.
+ * A visitor's "name" is their nickname, saved right after the role.
  */
 export async function chooseRole(role: Role, name?: string): Promise<string | null> {
   const mine = generation;
   try {
     const { error } = await withTimeout(
-      supabase.rpc('set_my_role', { p_role: role, p_name: name?.trim() || null }),
+      supabase.rpc('set_my_role', { p_role: role, p_name: role === 'user' ? null : name?.trim() || null }),
     );
     if (error) throw error;
-    const row = await readOwnRole();
-    if (mine !== generation) return null; // signed out meanwhile
-    set({
-      phase: 'ready',
-      role: row?.role ?? 'user',
-      name: row?.display_name ?? null,
-      error: null,
-    });
-    return null;
   } catch (e) {
     console.warn('[role] could not save the role:', messageOf(e));
+    return messageOf(e);
+  }
+  if (mine !== generation) return null; // signed out meanwhile
+  if (role === 'user') return saveNickname(name ?? '', true);
+  return finish(mine);
+}
+
+/**
+ * Save a visitor's nickname. Used for new visitors (right after their role is saved) and for
+ * existing visitors who haven't picked one. Resolves to null on success, or an error message.
+ */
+export async function saveNickname(nickname: string, justChoseRole = false): Promise<string | null> {
+  const mine = generation;
+  try {
+    const { error } = await withTimeout(supabase.rpc('set_my_nickname', { p_name: nickname.trim() }));
+    if (error) throw error;
+  } catch (e) {
+    console.warn('[role] could not save the nickname:', messageOf(e));
+    // The role itself is saved; only the nickname is missing, so ask for just that next.
+    if (justChoseRole && mine === generation) set({ phase: 'choose', role: 'user', name: null, error: null });
+    return messageOf(e);
+  }
+  return finish(mine);
+}
+
+/** Read the saved role back and move into the app. */
+async function finish(mine: number): Promise<string | null> {
+  try {
+    const row = await readOwnRole();
+    if (mine !== generation) return null; // signed out meanwhile
+    set({ phase: 'ready', role: row?.role ?? 'user', name: row?.display_name ?? null, error: null });
+    return null;
+  } catch (e) {
+    console.warn('[role] could not read the role back:', messageOf(e));
     return messageOf(e);
   }
 }

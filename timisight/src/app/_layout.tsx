@@ -46,6 +46,8 @@ function RootNavigator() {
         {/* Artists and statue commissions. */}
         <Stack.Screen name="artist/[sub]" options={{ presentation: 'card' }} />
         <Stack.Screen name="artist-edit" options={{ presentation: 'card' }} />
+        {/* Friends list (visitors only: the screen redirects everyone else). */}
+        <Stack.Screen name="friends" options={{ presentation: 'card' }} />
         <Stack.Screen name="commission/new" options={{ presentation: 'card' }} />
         <Stack.Screen name="commission/[id]" options={{ presentation: 'card' }} />
       </Stack.Protected>

@@ -6,7 +6,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { LanguagePicker } from '@/components/language-picker';
 import { BORDER, Brand, hardShadow } from '@/constants/brand';
-import { useCollection } from '@/constants/collection';
+import { collectFriendBonuses, useCollection } from '@/constants/collection';
+import { FC } from '@/constants/friends';
 import { RC, ROLE_STYLE } from '@/constants/roles';
 import { ME } from '@/constants/site-data';
 import { useAuth } from '@/hooks/auth';
@@ -43,16 +44,19 @@ export default function AccountScreen() {
 
   // Re-read the ranking when the tab is focused so points earned elsewhere show up promptly
   // (the leaderboard now lives here instead of its own tab).
+  // Friends bonuses are collected here too, so points from a friend who finished a path
+  // after you show up without you having to open the Friends screen.
   useFocusEffect(
     useCallback(() => {
       void refreshLeaderboard();
-    }, []),
+      if (role === 'user') void collectFriendBonuses();
+    }, [role]),
   );
 
   // The signed-in display name falls back to the demo "You" when the profile omits it.
   // An organization or artist is shown by its own name, not by the email it signed in with.
-  const displayName =
-    !isVisitor && roleName ? roleName : (user?.name ?? user?.email ?? ME.name);
+  // A visitor is shown by their nickname, not by the email they signed in with.
+  const displayName = roleName ?? user?.name ?? user?.email ?? ME.name;
 
   return (
     <View style={styles.root}>
@@ -103,6 +107,11 @@ export default function AccountScreen() {
             guard and drops the user back to the login screen. */}
         {!isLoading && (
           <View style={styles.actions}>
+            {role === 'user' ? (
+              <Pressable style={styles.editBtn} onPress={() => router.push('/friends')}>
+                <Text style={styles.editBtnText}>{FC[lang].accountButton}</Text>
+              </Pressable>
+            ) : null}
             {role === 'artist' ? (
               <Pressable style={styles.editBtn} onPress={() => router.push('/artist-edit')}>
                 <Text style={styles.editBtnText}>{c.accountEditArtist}</Text>
