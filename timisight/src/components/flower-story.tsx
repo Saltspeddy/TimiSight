@@ -1,4 +1,5 @@
-import { useState, type ReactNode } from 'react';
+import { useVideoPlayer, VideoView } from 'expo-video';
+import { useEffect, useState, type ReactNode } from 'react';
 import { Modal, Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import { Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler';
 import Animated, {
@@ -10,7 +11,7 @@ import Animated, {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Brand } from '@/constants/brand';
-import type { Flower } from '@/constants/flowers';
+import { CONTAIN_LANDSCAPE_VIDEOS, FLOWER_VIDEOS, LANDSCAPE_VIDEOS, type Flower } from '@/constants/flowers';
 import { LANG_CODES, type Lang } from '@/constants/site-data';
 import { STORIES } from '@/constants/stories';
 
@@ -31,6 +32,32 @@ export function FlowerStory({ flower, lang, visible, onClose, video, currentTime
   const { height } = useWindowDimensions();
   const insets = useSafeAreaInsets();
   const x = TXT[lang];
+
+  // The scan/pop-up animation for this flower, bundled in assets/videos/.
+  // Hooks must run unconditionally, so the player is always created — with a
+  // null source when this flower has no video (then we fall back to the
+  // placeholder text). Only play while the modal is visible.
+  const source = FLOWER_VIDEOS[flower.id] ?? null;
+  // Landscape videos (e.g. opera-rose) are filmed wider than tall; cover + crop
+  // the sides so they fill the portrait slot instead of showing black bars.
+  // Exception: videos whose subject isn't centered get "contain" (zoomed out,
+  // letterboxed) so the flower isn't cropped out of frame.
+  const fit =
+    LANDSCAPE_VIDEOS.has(flower.id) && !CONTAIN_LANDSCAPE_VIDEOS.has(flower.id) ? 'cover' : 'contain';
+  const player = useVideoPlayer(source, (p) => {
+    p.loop = true;
+  });
+
+  // Play from the start when the story opens; pause when it closes, so the
+  // animation replays each time the pop-up is shown (like the scan animation).
+  useEffect(() => {
+    if (!source) return;
+    if (visible) {
+      player.replay(); // seek to the start and play, so the animation restarts each open
+    } else {
+      player.pause();
+    }
+  }, [visible, source, player]);
   const [open, setOpen] = useState(false);
   const [tr, setTr] = useState<Lang>(lang);
   const bottom = insets.bottom;
@@ -87,7 +114,16 @@ export function FlowerStory({ flower, lang, visible, onClose, video, currentTime
         </View>
 
         <View style={s.video}>
-          {video ?? <Text style={s.videoText}>{x.video}</Text>}
+          {video ?? (source ? (
+            <VideoView
+              style={s.videoPlayer}
+              player={player}
+              contentFit={fit}
+              nativeControls={false}
+            />
+          ) : (
+            <Text style={s.videoText}>{x.video}</Text>
+          ))}
         </View>
 
         <Animated.View style={[s.sheet, sheet]}>
@@ -134,6 +170,7 @@ const s = StyleSheet.create({
   closeText: { color: '#fff', fontSize: 18, fontWeight: '800' },
   // Vertical (portrait) video filling the space above the subtitle sheet.
   video: { flex: 1, backgroundColor: '#000', alignItems: 'center', justifyContent: 'center' },
+  videoPlayer: { width: '100%', height: '100%' },
   videoText: { color: '#fff', opacity: 0.7 },
   // Translucent dark overlay anchored to the bottom of the video, so the video
   // stays visible behind the subtitles. White text for contrast over it.
