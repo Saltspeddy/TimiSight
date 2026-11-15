@@ -225,6 +225,10 @@ export default function QuestsScreen() {
   const flowerName = (flowerId: string): string => flowerById(flowerId)?.name[lang] ?? flowerId;
 
   const dailyFlower = daily ? flowerById(daily.flowerId) : undefined;
+  // The daily map only renders on Android (expo-maps = Google Maps there) and when the
+  // flower has coordinates. Gate the section header on the same condition as <DailyMap/>.
+  const showDailyMap =
+    Platform.OS === 'android' && dailyFlower?.lat != null && dailyFlower?.lng != null;
 
   // Only paths the user has actually activated (by discovering the start flower) are shown.
   // Until then, the section renders a hint prompting discovery of Casa Mühle — not the
@@ -256,8 +260,10 @@ export default function QuestsScreen() {
                 </View>
                 <Text style={sx.state}>{daily.collectedToday ? '✓' : '▶'}</Text>
               </Pressable>
-              {/* General map pin for the daily flower (no hot/cold — just where to look). */}
-              {dailyFlower ? (
+              {/* General map pin for the daily flower (no hot/cold — just where to look).
+                  Title + map are gated on the SAME condition (Android + coordinates present)
+                  so the "Where to look" header never dangles above an empty space. */}
+              {showDailyMap && dailyFlower ? (
                 <>
                   <Text style={sx.mapTitle}>{t.quests.mapTitle}</Text>
                   <DailyMap flower={dailyFlower} title={flowerName(daily.flowerId)} />

@@ -22,7 +22,6 @@ export const T = {
       tapToScan: 'Tap to visit',
       // Location-based quests
       nextStop: 'Next flower',
-      findIt: 'Find it',
       mapTitle: 'Where to look',
       locationDenied: 'Enable location to get hot/cold hints toward the next flower.',
       locating: 'Finding your location…',
@@ -117,7 +116,6 @@ export const T = {
       tapToScan: 'Atinge pentru a vizita',
       // Misiuni bazate pe locație
       nextStop: 'Floarea următoare',
-      findIt: 'Găsește-o',
       mapTitle: 'Unde să cauți',
       locationDenied: 'Activează locația pentru indicii „cald/rece” spre floarea următoare.',
       locating: 'Îți căutăm locația…',
