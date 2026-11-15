@@ -30,7 +30,7 @@ alter table flowers add column if not exists lng double precision;
 -- outdoor GPS can separate them; the final stop is indoors (hot/cold degrades to a
 -- "head inside and scan" hint near the building).
 -- ---------------------------------------------------------------------------
-update flowers set lat = 45.7558, lng = 21.2290 where id = 'casa-muhle';
-update flowers set lat = 45.7561, lng = 21.2275 where id = 'opera-rose';
-update flowers set lat = 45.7549, lng = 21.2281 where id = 'miklosi-tulip';
-update flowers set lat = 45.7603, lng = 21.2338 where id = 'timisoreana-malt';
+update flowers set lat = 45.7628094, lng = 21.2458510 where id = 'casa-muhle';
+update flowers set lat = 45.7629313, lng = 21.2467576 where id = 'opera-rose';
+update flowers set lat = 45.7633394, lng = 21.2459084 where id = 'miklosi-tulip';
+update flowers set lat = 45.7630403, lng = 21.2463197 where id = 'timisoreana-malt';
