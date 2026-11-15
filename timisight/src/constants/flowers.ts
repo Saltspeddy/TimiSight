@@ -49,6 +49,27 @@ export const FLOWER_IMAGES: Record<string, number> = {
   'timisoreana-malt': require('../../assets/images/violinist-rose.png'),
 };
 
+// The scan/pop-up animation video for each flower, keyed by flower id. Like
+// FLOWER_IMAGES, these stay bundled because require() needs a static path.
+// A flower without an entry here shows the "[Video goes here]" placeholder.
+// Add an entry when you add a flower's video to assets/videos/.
+export const FLOWER_VIDEOS: Record<string, number> = {
+  'opera-rose': require('../../assets/videos/opera-rose.mp4'),
+  'miklosi-tulip': require('../../assets/videos/miklosi-tulip.mp4'),
+  'timisoreana-malt': require('../../assets/videos/timisoreana-malt.mp4'),
+  'casa-muhle': require('../../assets/videos/muhle-moss-rose.mp4'),
+};
+
+// Ids of videos shot in landscape (wider than tall). The player slot is
+// portrait, so these are scaled to COVER (fill + crop the sides) instead of
+// letterboxed with black bars. Portrait videos default to "contain".
+export const LANDSCAPE_VIDEOS = new Set<string>(['opera-rose', 'casa-muhle']);
+
+// Landscape videos whose subject isn't centered in frame, so COVER would crop
+// the flower out. Quick hack: show the whole frame with CONTAIN instead
+// (zoomed out, letterboxed) so nothing important gets cut off.
+export const CONTAIN_LANDSCAPE_VIDEOS = new Set<string>(['casa-muhle']);
+
 // Shape of a row from the `flowers` table (see web/supabase/flowers.sql and
 // web/supabase/flowers-languages.sql). English and Romanian columns come from the first
 // file; German, Hungarian and Serbian columns are added by the second, so they are
@@ -184,8 +205,8 @@ export const FLOWERS: Flower[] = [
     color: '#e86a8e',
     points: 50,
     image: FLOWER_IMAGES['casa-muhle'],
-    name: twoLangs('Casa Mühle', 'Casa Mühle'),
-    latinName: 'Rosa × hybrida',
+    name: twoLangs('Mühle Moss Rose', 'Trandafirul de mușchi Mühle'),
+    latinName: 'Madame Louis Lévêque',
     // ⚠️ PLACEHOLDER coords — keep in sync with web/supabase/flowers-geo.sql.
     lat: 45.7558,
     lng: 21.229,

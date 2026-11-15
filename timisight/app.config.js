@@ -44,6 +44,7 @@ module.exports = ({ config }) => {
     },
     plugins: [
       ...basePlugins,
+      'expo-video',
       [
         'expo-location',
         {

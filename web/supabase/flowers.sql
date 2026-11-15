@@ -75,8 +75,8 @@ values
   -- -------------------------------------------------------------------------
   (
     'casa-muhle',
-    'Casa Mühle', 'Casa Mühle',
-    'Rosa × hybrida',
+    'Mühle Moss Rose', 'Trandafirul de mușchi Mühle',
+    'Madame Louis Lévêque',
     'Casa Mühle — the historic Mühle house and flower shop, the starting point of the city''s flower routes.',
     'Casa Mühle — casa și florăria istorică Mühle, punctul de pornire al traseelor florale ale orașului.',
     'A garden rose from the house that taught Timișoara to grow roses — where every flower path begins.',
