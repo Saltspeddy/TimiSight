@@ -230,9 +230,11 @@ function DailyMap({ flower, hint }: { flower: Flower; hint: string }) {
             {
               center,
               radius: DAILY_AREA_RADIUS_M,
-              color: 'rgba(36,55,232,0.18)', // Brand.blue @ ~18% fill
-              lineColor: Brand.blue,
-              lineWidth: 2,
+              // Brand orange — reads clearly against map tiles (roads/water/parks skew
+              // blue-green). Stronger fill + thicker outline so the area is obvious.
+              color: 'rgba(255,106,43,0.35)', // Brand.orange @ ~35% fill
+              lineColor: Brand.orange,
+              lineWidth: 4,
             },
           ]}
         />
